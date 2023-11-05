@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34221.43
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPL0", "CPL0\CPL0.vcxproj", "{8E2DCC07-1921-4A3D-886B-BD666745F942}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPL3", "CPL3\CPL3.vcxproj", "{432EBB42-07B5-4494-8286-7485F18C8E92}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{E7424987-D092-4B06-84C9-C681F0D27DB4}"
+	ProjectSection(SolutionItems) = preProject
+		Shared\io.h = Shared\io.h
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8E2DCC07-1921-4A3D-886B-BD666745F942}.Release|x64.ActiveCfg = Release|x64
+		{8E2DCC07-1921-4A3D-886B-BD666745F942}.Release|x64.Build.0 = Release|x64
+		{8E2DCC07-1921-4A3D-886B-BD666745F942}.Release|x64.Deploy.0 = Release|x64
+		{432EBB42-07B5-4494-8286-7485F18C8E92}.Release|x64.ActiveCfg = Release|x64
+		{432EBB42-07B5-4494-8286-7485F18C8E92}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F4E5BD7B-D5ED-4C9E-9BFC-934D99034A85}
+	EndGlobalSection
+EndGlobal
