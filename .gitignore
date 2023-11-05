@@ -378,3 +378,8 @@ FodyWeavers.xsd
 *.tlog
 *.recipe
 *.cer
+*.id0
+*.id2
+*.id1
+*.nam
+*.til
