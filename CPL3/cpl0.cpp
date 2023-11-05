@@ -18,7 +18,7 @@ bool cpl0_c::IsValid() const {
 HANDLE cpl0_c::GetHandle() const { return m_handle; }
 
 
-DWORD cpl0_c::SendControl(DWORD Code, void* InputBuffer, size_t InputSize,
+DWORD cpl0_c::Send(DWORD Code, void* InputBuffer, size_t InputSize,
                           void* OutputBuffer, size_t OutputSize) const {
   if (!IsValid()) {
     return 0;

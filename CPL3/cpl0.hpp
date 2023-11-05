@@ -13,7 +13,7 @@ class cpl0_c {
   bool IsValid() const;
   HANDLE GetHandle() const;
 
-  DWORD SendControl(DWORD Code, void* InputBuffer, size_t InputSize,
+  DWORD Send(DWORD Code, void* InputBuffer, size_t InputSize,
                     void* OutputBuffer, size_t OutputSize) const;
 
  private:

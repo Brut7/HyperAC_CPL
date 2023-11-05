@@ -5,6 +5,8 @@
 #include <ntddk.h>
 
 NTSTATUS HandleGetStatus(_Inout_ void* Buffer, _Out_ size_t* pSize) {
+    PAGED_CODE();
+
     CPL0_GET_STATUS_REQ req = *(CPL0_GET_STATUS_REQ*)Buffer;
     PCPL0_GET_STATUS_RES res = (PCPL0_GET_STATUS_RES)Buffer;
 
@@ -26,7 +28,7 @@ NTSTATUS DeviceControl(_In_ PDRIVER_OBJECT DriverObject, _Inout_ PIRP Irp) {
 
     stack = IoGetCurrentIrpStackLocation(Irp);
     switch (stack->Parameters.DeviceIoControl.IoControlCode) {
-    case IOCTL_HYPERAC_GET_STATUS: {
+    case IOCTL_GET_STATUS: {
         status = HandleGetStatus(Irp->AssociatedIrp.SystemBuffer, &Irp->IoStatus.Information);
     } break;
     }

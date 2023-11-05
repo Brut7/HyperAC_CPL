@@ -16,11 +16,10 @@ int main() {
   req.input = 64;
 
   CPL0_GET_STATUS_RES res;
-  cpl0->SendControl(IOCTL_HYPERAC_GET_STATUS, &req, sizeof(req), &res,
-                    sizeof(res));
+  if (cpl0->Send(IOCTL_GET_STATUS, &req, sizeof(req), &res, sizeof(res))) {
+	  printf("%i\n", res.output);
+  }
 
-  printf("%i\n", res.output);
-
-  cpl0.reset();
+  
   return 0;
 }
