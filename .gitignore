@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/build/CPL3.exe
+/build/CPL0.sys
+/build/intermediates/CPL0.tlog/signtool.timestamp.1.tlog
+/build/intermediates/CPL0.tlog/CL.read.1.tlog
+/build/intermediates/CPL0.tlog/CL.write.1.tlog
