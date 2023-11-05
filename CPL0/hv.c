@@ -8,13 +8,15 @@
 
 VOID HV_PeformVmExitCheck()
 {
+	PAGED_CODE();
+
 #define LOOP_COUNT 255
 #define NORMAL_AVG_TSC 2000
 
 	KAFFINITY prev_affinity = { 0 };
 	KIRQL prev_irql = 0;
 	int r[4] = {0, 0, 0, 0};
-	REPORT_NODE* report_node = NULL;
+	REPORT_NODE* report = NULL;
 	REPORT_HYPERVISOR* data = NULL;
 	ULONG64 avg_tsc = 0;
 	ULONG64 start_tsc = 0;
@@ -40,9 +42,35 @@ VOID HV_PeformVmExitCheck()
 
 	if (avg_tsc > NORMAL_AVG_TSC)
 	{
-		report_node = InsertReportNode(&g_ReportHead, sizeof(REPORT_HYPERVISOR));
-		data = (REPORT_HYPERVISOR*)&report_node->Data;
+		report = InsertReportNode(&g_ReportHead, sizeof(REPORT_HYPERVISOR));
+		data = (REPORT_HYPERVISOR*)&report->Data;
 
-		data->rdtsc = avg_tsc;
+		report->Id = REPORT_ID_HYPERVISOR;
+		report->DataSize = sizeof(REPORT_HYPERVISOR);
+
+		data->Tsc = avg_tsc;
 	}
+}
+
+VOID HV_FaultVmExit()
+{
+	PAGED_CODE();
+
+	KAFFINITY prev_affinity = { 0 };
+	KIRQL prev_irql = 0;
+	ULONG64 prev_cr3 = 0;
+	int r[4] = { 0, 0, 0, 0 };
+
+	prev_affinity = KeSetSystemAffinityThreadEx(1ull << KeGetCurrentProcessorNumber());
+	prev_irql = KfRaiseIrql(HIGH_LEVEL, NULL);
+	_disable();
+
+	prev_cr3 = __readcr3();
+	__writecr3(0);
+	__cpuid(&r, 1);
+	__writecr3(prev_cr3);
+
+	_enable();
+	KeLowerIrql(prev_irql);
+	KeRevertToUserAffinityThreadEx(prev_affinity);
 }

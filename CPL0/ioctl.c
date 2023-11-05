@@ -9,18 +9,28 @@ NTSTATUS DeviceControl(_In_ PDRIVER_OBJECT DriverObject, _Inout_ PIRP Irp) {
     UNREFERENCED_PARAMETER(DriverObject);
     PAGED_CODE();
 
+    Irp->IoStatus.Information = 0;
+
     PIO_STACK_LOCATION stack = NULL;
     NTSTATUS status = STATUS_INVALID_PARAMETER;
     ULONG ctl_code = 0;
 
-    Irp->IoStatus.Information = 0;
-
     stack = IoGetCurrentIrpStackLocation(Irp);
     ctl_code = stack->Parameters.DeviceIoControl.IoControlCode;
 
-    switch (ctl_code) {
-    case IOCTL_GET_HWID: {
+    switch (ctl_code)
+    {
+    case IOCTL_GET_HWID:
+    {
         status = IOCTL_GetHWID(Irp->AssociatedIrp.SystemBuffer, &Irp->IoStatus.Information);
+    } break;
+    case IOCTL_GET_REPORTS_SIZE:
+    {
+        status = IOCTL_GetReportsSize(Irp->AssociatedIrp.SystemBuffer, &Irp->IoStatus.Information);
+    } break;
+    case IOCTL_GET_REPORTS:
+    {
+        status = IOCTL_GetReports(Irp->AssociatedIrp.SystemBuffer, &Irp->IoStatus.Information);
     } break;
     }
 

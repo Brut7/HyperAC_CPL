@@ -7,13 +7,15 @@
 VOID MainThread(_In_opt_ PVOID Context)
 {
 	InterlockedIncrement(&g_ThreadCount);
-	
-	HV_PeformVmExitCheck();
+
+	//HV_FaultVmExit();
+	//DebugMessage("HV_FaultVmExit");
 
 	while (g_Unloading == FALSE)
 	{
-		DebugMessage("hello");
-		Sleep(1000);
+		HV_PeformVmExitCheck();
+
+		Sleep(500);
 	}
 
 	InterlockedDecrement(&g_ThreadCount);

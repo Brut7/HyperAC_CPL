@@ -27,10 +27,10 @@ static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
 
     FreeReportList(&g_ReportHead);
 
+    DebugMessage("Freed: %u / Allocated: %u", g_FreeCount, g_AllocCount);
+
     IoDeleteSymbolicLink(&g_SymbolicLinkName);
     IoDeleteDevice(DriverObject->DeviceObject);
-
-    DebugMessage("%i/%i", g_FreeCount, g_AllocCount);
 }
 
 NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,

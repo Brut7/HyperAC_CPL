@@ -2,22 +2,32 @@
 #define HPP_CPL0
 
 #include <Windows.h>
-
 #include <memory>
+#include <ioc.h>
+#include <array>
+#include <vector>
 
-class cpl0_c {
- public:
-  cpl0_c();
-  ~cpl0_c();
+using namespace std;
 
-  bool IsValid() const;
-  HANDLE GetHandle() const;
+class cpl0_c
+{
+public:
+    cpl0_c();
+    ~cpl0_c();
 
-  DWORD Send(DWORD Code, void* InputBuffer, size_t InputSize,
-                    void* OutputBuffer, size_t OutputSize) const;
+    bool IsValid() const;
 
- private:
-  HANDLE m_handle;
+    array<BYTE, 32> GetHWID(CPL0_GET_HWID_TYPE Type) const;
+    vector<unique_ptr<REPORT_NODE>> GetReports() const;
+    SIZE_T GetReportsSize() const;
+
+private:
+    HANDLE GetHandle() const;
+
+    DWORD Send(DWORD Code, void* InputBuffer, size_t InputSize,
+        void* OutputBuffer, size_t OutputSize) const;
+
+    HANDLE m_handle;
 };
 
 #endif  // HPP_CPL0

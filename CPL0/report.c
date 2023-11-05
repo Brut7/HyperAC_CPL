@@ -3,9 +3,69 @@
 #include "config.h"
 #include "spinlock.h"
 
+REPORT_NODE* GetReportNode(_In_ REPORT_NODE* Head, _In_ USHORT Index)
+{
+	PAGED_CODE();
+
+	REPORT_NODE* node = NULL;
+	USHORT count = 0;
+
+	if (Head == NULL)
+	{
+		return NULL;
+	}
+
+	SpinlockAcquire(&g_ReportLock);
+
+	node = Head->Next;
+	while (node)
+	{
+		if (count == Index)
+		{
+			break;
+		}
+
+		++count;
+		node = node->Next;
+	}
+
+	SpinlockRelease(&g_ReportLock);
+	return node;
+}
+
+USHORT GetReportCount(_In_ REPORT_NODE* Head)
+{
+	PAGED_CODE();
+
+	USHORT count = 0;
+	REPORT_NODE* node = NULL;
+
+	if (Head == NULL)
+	{
+		return 0;
+	}
+
+	SpinlockAcquire(&g_ReportLock);
+
+	node = Head->Next;
+	while (node)
+	{
+		++count;
+		node = node->Next;
+	}
+
+	SpinlockRelease(&g_ReportLock);
+	return count;
+}
+
 REPORT_NODE* InsertReportNode(_In_ REPORT_NODE* Head, _In_ SIZE_T DataSize)
 {
 	PAGED_CODE();
+
+	if (Head == NULL)
+	{
+		return NULL;
+	}
 
 	REPORT_NODE* last = Head;
 	REPORT_NODE* node = NULL;
