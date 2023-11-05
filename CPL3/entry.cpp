@@ -22,16 +22,15 @@ string Hex2String(const BYTE* Data, SIZE_T Size) {
 	return ss.str();
 }
 
-string GetHWID(shared_ptr<cpl0_c> cpl0, CPL0_GET_HWID_TYPE Type) {
+string GetHWID(shared_ptr<cpl0_c> cpl0, CPL0_GET_HWID_TYPE Type)
+{
 	CPL0_GET_HWID_REQ req;
 	req.Type = Type;
 
 	CPL0_GET_HWID_RES res;
-	if (!cpl0->Send(IOCTL_GET_HWID, &req, sizeof(req), &res, sizeof(res))) {
-		return ""; 
-	}
-
-	return Hex2String(res.Hash, sizeof(res.Hash));
+	return cpl0->Send(IOCTL_GET_HWID, &req, sizeof(req), &res, sizeof(res)) 
+		? Hex2String(res.Hash, sizeof(res.Hash)) 
+		: "";
 }
 
 int main() {

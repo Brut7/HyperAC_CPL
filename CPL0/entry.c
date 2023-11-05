@@ -7,7 +7,7 @@
 #include "ioctl.h"
 #include "main.h"
 #include "common.h"
-
+#include "flow.h"
 
 static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
 {
@@ -17,7 +17,7 @@ static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
     g_Unloading = TRUE;
     while (InterlockedExchange8(&g_ThreadCount, g_ThreadCount) > 0)
     {
-        _mm_pause();
+        Sleep(1);
     }
 
     if (g_MainThread != NULL)

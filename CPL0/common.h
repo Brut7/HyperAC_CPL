@@ -3,11 +3,6 @@
 
 #include <ntifs.h>
 
-static const LARGE_INTEGER _30s = { .QuadPart = -300000000 };
-static const LARGE_INTEGER _1s = { .QuadPart = -10000000 };
-static const LARGE_INTEGER _500ms = { .QuadPart = -5000000 };
-static const LARGE_INTEGER _1ms = { .QuadPart = -10000 };
-
 // Size=32
 typedef struct _SYSTEM_BOOT_ENVIRONMENT_INFORMATION {
 	GUID BootIdentifier;

@@ -2,15 +2,18 @@
 #include "config.h"
 #include "common.h"
 #include "hv.h"
+#include "flow.h"
 
-VOID MainThread(_In_opt_ PVOID Context) {
+VOID MainThread(_In_opt_ PVOID Context)
+{
 	InterlockedIncrement(&g_ThreadCount);
+	
+	HV_PeformVmExitCheck();
 
-	while (g_Unloading == FALSE) {
-		HV_PeformVmExitCheck();
-
+	while (g_Unloading == FALSE)
+	{
 		DebugMessage("hello");
-		KeDelayExecutionThread(KernelMode, FALSE, &_1ms);
+		Sleep(1000);
 	}
 
 	InterlockedDecrement(&g_ThreadCount);
