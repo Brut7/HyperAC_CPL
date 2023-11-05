@@ -9,7 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPL3", "CPL3\CPL3.vcxproj",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{E7424987-D092-4B06-84C9-C681F0D27DB4}"
 	ProjectSection(SolutionItems) = preProject
-		Shared\io.h = Shared\io.h
+		Shared\ioc.h = Shared\ioc.h
 	EndProjectSection
 EndProject
 Global

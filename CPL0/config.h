@@ -1,11 +1,25 @@
 #ifndef H_CONFIG
 #define H_CONFIG
 
+#include <ntifs.h>
+#include "report.h"
+#include "spinlock.h"
+
 #define DebugMessage(msg, ...) \
   DbgPrintEx(0, 0, "[" __FUNCTION__ "] " msg, __VA_ARGS__)
 
+extern volatile ULONG g_AllocCount;
+extern volatile ULONG g_FreeCount;
 
-static UNICODE_STRING g_DeviceName = RTL_CONSTANT_STRING(L"\\Device\\HyperAC");
-static UNICODE_STRING g_SymbolicLinkName = RTL_CONSTANT_STRING(L"\\??\\HyperAC");
+extern BOOLEAN g_Unloading;
+extern volatile ULONG g_ThreadCount;
+extern HANDLE g_MainThread;
+
+extern REPORT_NODE g_ReportHead;
+extern SPINLOCK g_ReportLock;
+
+extern PDRIVER_OBJECT g_DriverObject;
+extern UNICODE_STRING g_DeviceName;
+extern UNICODE_STRING g_SymbolicLinkName;
 
 #endif// H_CONFIG

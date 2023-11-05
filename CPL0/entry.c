@@ -5,40 +5,76 @@
 
 #include "config.h"
 #include "ioctl.h"
+#include "main.h"
+#include "common.h"
 
-static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject) {
-  UNREFERENCED_PARAMETER(DriverObject);
-  PAGED_CODE();
 
-  IoDeleteSymbolicLink(&g_SymbolicLinkName);
-  IoDeleteDevice(DriverObject->DeviceObject);
+static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
+{
+    UNREFERENCED_PARAMETER(DriverObject);
+    PAGED_CODE();
+
+    g_Unloading = TRUE;
+    while (InterlockedExchange8(&g_ThreadCount, g_ThreadCount) > 0)
+    {
+        _mm_pause();
+    }
+
+    if (g_MainThread != NULL)
+    {
+        ZwClose(g_MainThread);
+    }
+
+    FreeReportList(&g_ReportHead);
+
+    IoDeleteSymbolicLink(&g_SymbolicLinkName);
+    IoDeleteDevice(DriverObject->DeviceObject);
+
+    DebugMessage("%i/%i", g_FreeCount, g_AllocCount);
 }
 
 NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
-                     _In_ PUNICODE_STRING RegistryPath) {
-  UNREFERENCED_PARAMETER(RegistryPath);
-  PAGED_CODE();
+    _In_ PUNICODE_STRING RegistryPath)
+{
+    UNREFERENCED_PARAMETER(RegistryPath);
+    PAGED_CODE();
 
-  NTSTATUS status = STATUS_SUCCESS;
+    g_DriverObject = DriverObject;
 
-  status = IoCreateDevice(DriverObject, NULL, &g_DeviceName,
-                          FILE_DEVICE_UNKNOWN, FILE_DEVICE_SECURE_OPEN, FALSE,
-                          &DriverObject->DeviceObject);
-  if (!NT_SUCCESS(status)) {
-    DebugMessage("IoCreateDevice failed: 0x%08X\n", status);
+    DebugMessage("DriverEntry called\n");
+
+    NTSTATUS status = STATUS_SUCCESS;
+
+    status = IoCreateDevice(DriverObject, NULL, &g_DeviceName,
+        FILE_DEVICE_UNKNOWN, FILE_DEVICE_SECURE_OPEN, FALSE,
+        &DriverObject->DeviceObject);
+    if (!NT_SUCCESS(status))
+    {
+        DebugMessage("IoCreateDevice failed: 0x%08X\n", status);
+        return status;
+    }
+
+    status = IoCreateSymbolicLink(&g_SymbolicLinkName, &g_DeviceName);
+    if (!NT_SUCCESS(status))
+    {
+        DebugMessage("IoCreateSymbolicLink failed: 0x%08X\n", status);
+        IoDeleteDevice(DriverObject->DeviceObject);
+        return status;
+    }
+
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = DeviceCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = DeviceClose;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DeviceControl;
+    DriverObject->DriverUnload = DriverUnload;
+
+    status = PsCreateSystemThread(&g_MainThread, THREAD_ALL_ACCESS, NULL, NULL, NULL, &MainThread, NULL);
+    if (!NT_SUCCESS(status))
+    {
+        DebugMessage("PsCreateSystemThread failed: 0x%08X\n", status);
+        IoDeleteSymbolicLink(&g_SymbolicLinkName);
+        IoDeleteDevice(DriverObject->DeviceObject);
+        return status;
+    }
+
     return status;
-  }
-
-  status = IoCreateSymbolicLink(&g_SymbolicLinkName, &g_DeviceName);
-  if (!NT_SUCCESS(status)) {
-    DebugMessage("IoCreateSymbolicLink failed: 0x%08X\n", status);
-    IoDeleteDevice(DriverObject->DeviceObject);
-    return status;
-  }
-
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = DeviceCreate;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = DeviceClose;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DeviceControl;
-  DriverObject->DriverUnload = DriverUnload;
-  return STATUS_SUCCESS;
 }

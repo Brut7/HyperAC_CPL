@@ -1,0 +1,28 @@
+#ifndef H_IO
+#define H_IO
+
+#define IOCTL_GET_HWID \
+  CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#include <minwindef.h>
+
+typedef enum _CPL0_GET_HWID_TYPE {
+	BootGUID,
+	MonitorEDID, // TODO
+}CPL0_GET_HWID_TYPE, *PCPL0_GET_HWID_TYPE;
+
+typedef struct _CPL0_GET_HWID_REQ {
+	CPL0_GET_HWID_TYPE Type;
+} CPL0_GET_HWID_REQ, *PCPL0_GET_HWID_REQ;
+
+typedef struct _CPL0_GET_HWID_RES {
+	BYTE Hash[32]; // SHA256
+} CPL0_GET_HWID_RES, *PCPL0_GET_HWID_RES;
+
+typedef struct _REPORT_HYPERVISOR {
+	struct {
+		BOOL rdtsc : 1;
+	};
+}REPORT_HYPERVISOR, * PREPORT_HYPERVISOR;
+
+#endif  // H_IO

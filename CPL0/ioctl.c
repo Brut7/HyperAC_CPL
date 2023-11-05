@@ -1,21 +1,9 @@
 #include "ioctl.h"
 #include "config.h"
-#include <io.h>
+#include "handlers.h"
+#include <ioc.h>
 
 #include <ntddk.h>
-
-NTSTATUS HandleGetStatus(_Inout_ void* Buffer, _Out_ size_t* pSize) {
-    PAGED_CODE();
-
-    CPL0_GET_STATUS_REQ req = *(CPL0_GET_STATUS_REQ*)Buffer;
-    PCPL0_GET_STATUS_RES res = (PCPL0_GET_STATUS_RES)Buffer;
-
-    res->output = 256;
-    res->output = req.input * 2;
-
-    *pSize = sizeof(CPL0_GET_STATUS_RES);
-    return STATUS_SUCCESS;
-}
 
 NTSTATUS DeviceControl(_In_ PDRIVER_OBJECT DriverObject, _Inout_ PIRP Irp) {
     UNREFERENCED_PARAMETER(DriverObject);
@@ -23,13 +11,16 @@ NTSTATUS DeviceControl(_In_ PDRIVER_OBJECT DriverObject, _Inout_ PIRP Irp) {
 
     PIO_STACK_LOCATION stack = NULL;
     NTSTATUS status = STATUS_INVALID_PARAMETER;
+    ULONG ctl_code = 0;
 
     Irp->IoStatus.Information = 0;
 
     stack = IoGetCurrentIrpStackLocation(Irp);
-    switch (stack->Parameters.DeviceIoControl.IoControlCode) {
-    case IOCTL_GET_STATUS: {
-        status = HandleGetStatus(Irp->AssociatedIrp.SystemBuffer, &Irp->IoStatus.Information);
+    ctl_code = stack->Parameters.DeviceIoControl.IoControlCode;
+
+    switch (ctl_code) {
+    case IOCTL_GET_HWID: {
+        status = IOCTL_GetHWID(Irp->AssociatedIrp.SystemBuffer, &Irp->IoStatus.Information);
     } break;
     }
 

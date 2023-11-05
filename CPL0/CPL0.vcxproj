@@ -51,8 +51,10 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <Optimization>Disabled</Optimization>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <Optimization>Full</Optimization>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <EntryPointSymbol>DriverEntry</EntryPointSymbol>
@@ -66,16 +68,36 @@
     <Link>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <MergeSections>_TEXT=.text;_PAGE=PAGE</MergeSections>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/INTEGRITYCHECK %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="config.c" />
     <ClCompile Include="entry.c" />
+    <ClCompile Include="handlers.c" />
+    <ClCompile Include="hv.c" />
+    <ClCompile Include="hwid.c" />
     <ClCompile Include="ioctl.c" />
+    <ClCompile Include="main.c" />
+    <ClCompile Include="mmu.c" />
+    <ClCompile Include="report.c" />
+    <ClCompile Include="sha256.c" />
+    <ClCompile Include="spinlock.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="common.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="entry.h" />
+    <ClInclude Include="handlers.h" />
+    <ClInclude Include="hv.h" />
+    <ClInclude Include="hwid.h" />
     <ClInclude Include="ioctl.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="mmu.h" />
+    <ClInclude Include="report.h" />
+    <ClInclude Include="sha256.h" />
+    <ClInclude Include="spinlock.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
