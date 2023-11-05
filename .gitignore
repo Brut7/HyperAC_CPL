@@ -375,3 +375,6 @@ FodyWeavers.xsd
 /build/intermediates/CPL3.tlog/CL.write.1.tlog
 /build/intermediates/CPL3.tlog/Cl.items.tlog
 /build/intermediates/CPL3.tlog/CPL3.lastbuildstate
+*.tlog
+*.recipe
+*.cer
