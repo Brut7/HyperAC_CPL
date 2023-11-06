@@ -13,6 +13,7 @@
     <ClCompile Include="config.c" />
     <ClCompile Include="spinlock.c" />
     <ClCompile Include="flow.c" />
+    <ClCompile Include="memory.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
@@ -29,5 +30,6 @@
     <ClInclude Include="spinlock.h" />
     <ClInclude Include="flow.h" />
     <ClInclude Include="ia32.h" />
+    <ClInclude Include="memory.h" />
   </ItemGroup>
 </Project>

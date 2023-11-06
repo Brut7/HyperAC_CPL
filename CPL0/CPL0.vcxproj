@@ -81,6 +81,7 @@
     <ClCompile Include="hwid.c" />
     <ClCompile Include="ioctl.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="memory.c" />
     <ClCompile Include="mmu.c" />
     <ClCompile Include="report.c" />
     <ClCompile Include="sha256.c" />
@@ -97,6 +98,7 @@
     <ClInclude Include="ia32.h" />
     <ClInclude Include="ioctl.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="memory.h" />
     <ClInclude Include="mmu.h" />
     <ClInclude Include="report.h" />
     <ClInclude Include="sha256.h" />

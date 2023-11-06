@@ -25,6 +25,11 @@ static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
         ZwClose(g_MainThread);
     }
 
+    if (g_SigScanThread != NULL)
+    {
+        ZwClose(g_SigScanThread);
+    }
+
     FreeReportList(&g_ReportHead);
 
     DebugMessage("Freed: %u / Allocated: %u", g_FreeCount, g_AllocCount);
@@ -67,12 +72,19 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DeviceControl;
     DriverObject->DriverUnload = DriverUnload;
 
-    status = PsCreateSystemThread(&g_MainThread, THREAD_ALL_ACCESS, NULL, NULL, NULL, &MainThread, NULL);
+    status = PsCreateSystemThread(&g_MainThread, THREAD_ALL_ACCESS, NULL, NULL, NULL, MainThread, NULL);
     if (!NT_SUCCESS(status))
     {
         DebugMessage("PsCreateSystemThread failed: 0x%08X\n", status);
-        IoDeleteSymbolicLink(&g_SymbolicLinkName);
-        IoDeleteDevice(DriverObject->DeviceObject);
+        DriverUnload(DriverObject);
+        return status;
+    }
+
+    status = PsCreateSystemThread(&g_SigScanThread, THREAD_ALL_ACCESS, NULL, NULL, NULL, SigScanThread, NULL);
+    if (!NT_SUCCESS(status))
+    {
+        DebugMessage("PsCreateSystemThread failed: 0x%08X\n", status);
+        DriverUnload(DriverObject);
         return status;
     }
 

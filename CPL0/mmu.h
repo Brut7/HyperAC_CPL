@@ -15,6 +15,6 @@ static const ULONG MMU_POOL_TAGS[8] = {
 };
 
 PVOID MMU_Alloc(_In_ SIZE_T Size);
-VOID MMU_Free(_In_ PVOID Addr);
+VOID MMU_Free(_In_ PVOID Address);
 
 #endif // H_MMU

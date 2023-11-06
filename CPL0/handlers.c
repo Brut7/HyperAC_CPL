@@ -102,7 +102,6 @@ NTSTATUS IOCTL_GetReports(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
 
         if (report->DataSize > size_left)
         {
-            DebugMessage("report size %i is bigger than size left %i\n", report->DataSize, size_left);
             break;
         }
 

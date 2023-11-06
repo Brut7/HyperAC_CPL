@@ -10,7 +10,7 @@ NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[32]) {
 	NTSTATUS status = STATUS_SUCCESS;
 	ULONG req_size = 0;
 	PSYSTEM_BOOT_ENVIRONMENT_INFORMATION boot_info = NULL;
-	SHA256_CTX ctx = { 0 };
+	SHA256_CTX sha256_ctx = { 0 };
 
 	status = ZwQuerySystemInformation(SystemBootEnvironmentInformation, NULL, 0, &req_size);
 	if (status != STATUS_INFO_LENGTH_MISMATCH) {
@@ -31,9 +31,9 @@ NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[32]) {
 		return status;
 	}
 
-	sha256_init(&ctx);
-	sha256_update(&ctx, (UCHAR*)&boot_info->BootIdentifier, sizeof(GUID));
-	sha256_final(&ctx, Hash);
+	sha256_init(&sha256_ctx);
+	sha256_update(&sha256_ctx, (UCHAR*)&boot_info->BootIdentifier, sizeof(GUID));
+	sha256_final(&sha256_ctx, Hash);
 
 	MMU_Free(boot_info);
 	return status;

@@ -34,8 +34,16 @@ int main() {
 		  case REPORT_ID_HYPERVISOR:
 		  {
 			  REPORT_HYPERVISOR* data = (REPORT_HYPERVISOR*)&report->Data;
-			  printf("REPORT_ID_HYPERVISOR\n");
+			  printf("REPORT_ID_HYPERVISOR:\n");
 			  printf("\t+ Tsc: %llu\n", data->Tsc);
+		  } break;
+		  case REPORT_ID_SIGNATURE:
+		  {
+			  REPORT_SIGNATURE* data = (REPORT_SIGNATURE*)&report->Data;
+			  printf("REPORT_ID_SIGNATURE:\n");
+			  printf("\t+ PageStart: %p\n", data->PageStart);
+			  printf("\t+ PageSize: %x\n", data->PageSize);
+			  printf("\t+ HashIndex: %u\n", data->HashIndex);
 		  } break;
 		  }
 

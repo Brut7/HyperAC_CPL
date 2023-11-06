@@ -67,6 +67,8 @@ REPORT_NODE* InsertReportNode(_In_ REPORT_NODE* Head, _In_ SIZE_T DataSize)
 		return NULL;
 	}
 
+	// MUST CHECK IF REPORT ALREADY EXISTS
+
 	REPORT_NODE* last = Head;
 	REPORT_NODE* node = NULL;
 

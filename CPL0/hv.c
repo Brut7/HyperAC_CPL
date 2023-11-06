@@ -6,7 +6,7 @@
 #include <intrin.h>
 #include <ioc.h>
 
-VOID HV_PeformVmExitCheck()
+VOID PeformVmExitCheck(VOID)
 {
 	PAGED_CODE();
 
@@ -52,7 +52,7 @@ VOID HV_PeformVmExitCheck()
 	}
 }
 
-VOID HV_FaultVmExit()
+VOID FaultVmExit(VOID)
 {
 	PAGED_CODE();
 

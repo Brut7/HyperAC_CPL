@@ -3,6 +3,8 @@
 
 #include <ntifs.h>
 
+#define TABLE_SIZE 512
+
 // Size=32
 typedef struct _SYSTEM_BOOT_ENVIRONMENT_INFORMATION {
 	GUID BootIdentifier;

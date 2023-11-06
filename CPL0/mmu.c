@@ -20,10 +20,10 @@ PVOID MMU_Alloc(_In_ SIZE_T Size) {
 	return data;
 }
 
-VOID MMU_Free(_In_ PVOID Addr) {
+VOID MMU_Free(_In_ PVOID Address) {
 	PMMU_POOL_HEADER header = NULL;
 
-	header = (PMMU_POOL_HEADER)((ULONG64)Addr - sizeof(MMU_POOL_HEADER));
+	header = (PMMU_POOL_HEADER)((ULONG64)Address - sizeof(MMU_POOL_HEADER));
 	ExFreePoolWithTag(header, header->Tag);
 
 	InterlockedIncrement(&g_FreeCount);

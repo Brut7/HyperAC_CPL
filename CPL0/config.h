@@ -8,12 +8,13 @@
 #define DebugMessage(msg, ...) \
   DbgPrintEx(0, 0, "[" __FUNCTION__ "] " msg, __VA_ARGS__)
 
-extern volatile ULONG g_AllocCount;
-extern volatile ULONG g_FreeCount;
+extern volatile LONG g_AllocCount;
+extern volatile LONG g_FreeCount;
 
 extern BOOLEAN g_Unloading;
 extern volatile ULONG g_ThreadCount;
 extern HANDLE g_MainThread;
+extern HANDLE g_SigScanThread;
 
 extern REPORT_NODE g_ReportHead;
 extern SPINLOCK g_ReportLock;

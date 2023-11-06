@@ -4,10 +4,10 @@
 #include <ntifs.h>
 #include <minwindef.h>
 
-VOID HV_PeformVmExitCheck();
-VOID HV_FaultVmExit();
+VOID PeformVmExitCheck(VOID);
+VOID FaultVmExit(VOID);
 
-#pragma alloc_text(PAGE, HV_PeformVmExitCheck)
-#pragma alloc_text(PAGE, HV_FaultVmExit)
+#pragma alloc_text(PAGE, PeformVmExitCheck)
+#pragma alloc_text(PAGE, FaultVmExit)
 
 #endif // H_HV

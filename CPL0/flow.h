@@ -3,6 +3,6 @@
 
 #include <ntifs.h>
 
-VOID Sleep(ULONG64 Milliseconds);
+VOID Sleep(_In_ LONG64 Milliseconds);
 
 #endif // H_FLOW
