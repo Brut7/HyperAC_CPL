@@ -51,9 +51,9 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <Optimization>Full</Optimization>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <Optimization>Disabled</Optimization>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
@@ -83,6 +83,7 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="memory.c" />
     <ClCompile Include="mmu.c" />
+    <ClCompile Include="pt.c" />
     <ClCompile Include="report.c" />
     <ClCompile Include="sha256.c" />
     <ClCompile Include="spinlock.c" />
@@ -100,6 +101,7 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="memory.h" />
     <ClInclude Include="mmu.h" />
+    <ClInclude Include="pt.h" />
     <ClInclude Include="report.h" />
     <ClInclude Include="sha256.h" />
     <ClInclude Include="spinlock.h" />

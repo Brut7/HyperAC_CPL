@@ -14,7 +14,7 @@ static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
     UNREFERENCED_PARAMETER(DriverObject);
     PAGED_CODE();
 
-    g_Unloading = TRUE;
+    InterlockedExchange(&g_UnloadThreads, TRUE);
     while (InterlockedExchange8(&g_ThreadCount, g_ThreadCount) > 0)
     {
         Sleep(1);
@@ -25,9 +25,9 @@ static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
         ZwClose(g_MainThread);
     }
 
-    if (g_SigScanThread != NULL)
+    if (g_ScannerThread != NULL)
     {
-        ZwClose(g_SigScanThread);
+        ZwClose(g_ScannerThread);
     }
 
     FreeReportList(&g_ReportHead);
@@ -80,7 +80,7 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
         return status;
     }
 
-    status = PsCreateSystemThread(&g_SigScanThread, THREAD_ALL_ACCESS, NULL, NULL, NULL, SigScanThread, NULL);
+    status = PsCreateSystemThread(&g_ScannerThread, THREAD_ALL_ACCESS, NULL, NULL, NULL, ScannerThread, NULL);
     if (!NT_SUCCESS(status))
     {
         DebugMessage("PsCreateSystemThread failed: 0x%08X\n", status);

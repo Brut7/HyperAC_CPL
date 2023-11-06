@@ -4,12 +4,9 @@
 #include <ntifs.h>
 #include "ia32.h"
 
-ULONG64 GetVirtualAddress(_In_ LONG64 Address);
-BOOLEAN IsValidAddress(_In_ ULONG64 Address);
+NTSTATUS SafeCopy(_Out_ PVOID Dst, _In_ CONST PVOID Src, _In_ SIZE_T Size);
+ULONG64 FindSignature(_In_ UCHAR* Data, _In_ SIZE_T Size, _In_ CONST CHAR* Pattern, _In_ CONST CHAR* Mask);
 
-VOID OnEachPDE(_In_ PDE_64 pde, _In_ VOID(*OnEachPage)(ULONG64, SIZE_T, PVOID), _In_opt_ PVOID Context);
-VOID OnEachPDPTE(_In_ PDPTE_64 pdpte, _In_ VOID(*OnEachPage)(ULONG64, SIZE_T, PVOID), _In_opt_ PVOID Context);
-VOID OnEachPML4E(_In_ PML4E_64 pml4e, _In_ VOID(*OnEachPage)(ULONG64, SIZE_T, PVOID), _In_opt_ PVOID Context);
-VOID WalkPageTables(_In_ CR3 cr3, _In_ VOID(*OnEachPage)(ULONG64, SIZE_T, PVOID), _In_opt_ PVOID Context);
+#pragma alloc_text(PAGE, SafeCopy)
 
 #endif

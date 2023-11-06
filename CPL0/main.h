@@ -3,10 +3,10 @@
 
 #include <ntifs.h>
 
-VOID SigScanThread(_In_opt_ PVOID Context);
+VOID ScannerThread(_In_opt_ PVOID Context);
 VOID MainThread(_In_opt_ PVOID Context);
 
-#pragma alloc_text(PAGE, SigScanThread)
+#pragma alloc_text(PAGE, ScannerThread)
 #pragma alloc_text(PAGE, MainThread)
 
 #endif

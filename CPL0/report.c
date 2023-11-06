@@ -17,10 +17,9 @@ VOID ValidateReportList()
     {
         if (node->Index != count)
         {
-            __fastfail(FAST_FAIL_CORRUPTED_REPORT_LIST);
-            return;
+            return __fastfail(FAST_FAIL_CORRUPTED_REPORT_LIST);
         }
-
+ 
         node = node->Next;
         ++count;
     }
@@ -75,6 +74,7 @@ BOOLEAN InsertReportNode(_In_ REPORT_NODE* NewNode)
     USHORT count = 0;
     REPORT_NODE* node = NULL;
     REPORT_NODE* last = NULL;
+    REPORT_NODE* validator_node = NULL;
 
     if (NewNode == NULL)
     {
@@ -108,6 +108,7 @@ BOOLEAN InsertReportNode(_In_ REPORT_NODE* NewNode)
 
     NewNode->Index = count;
     last->Next = NewNode;
+
     SpinlockRelease(&g_ReportLock);
     return TRUE;
 }

@@ -44,12 +44,6 @@ VOID PeformVmExitCheck(VOID)
 	if (avg_tsc > NORMAL_AVG_TSC)
 	{
 		report = MMU_Alloc(REPORT_HEADER_SIZE + sizeof(REPORT_HYPERVISOR));
-		if (!report)
-		{
-			__fastfail(FAST_FAIL_POOL_ERROR);
-			return;
-		}
-
 		report->Id = REPORT_ID_HYPERVISOR;
 		report->DataSize = sizeof(REPORT_HYPERVISOR);
 

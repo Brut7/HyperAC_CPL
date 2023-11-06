@@ -1,13 +1,13 @@
 #include "config.h"
 #include "spinlock.h"
 
-volatile LONG g_AllocCount = 0;
-volatile LONG g_FreeCount = 0;
+volatile LONG64 g_AllocCount = 0;
+volatile LONG64 g_FreeCount = 0;
 
-BOOLEAN g_Unloading = FALSE;
+volatile LONG g_UnloadThreads = FALSE;
 volatile LONG g_ThreadCount = 0;
 HANDLE g_MainThread = NULL;
-HANDLE g_SigScanThread = NULL;
+HANDLE g_ScannerThread = NULL;
 
 REPORT_NODE g_ReportHead = { NULL };
 SPINLOCK g_ReportLock = { 0 };

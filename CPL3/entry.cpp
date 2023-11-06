@@ -41,9 +41,21 @@ int main() {
 		  {
 			  REPORT_SIGNATURE* data = (REPORT_SIGNATURE*)&report->Data;
 			  printf("REPORT_ID_SIGNATURE:\n");
+			  printf("\t+ SigIndex: %u\n", data->SigIndex);
 			  printf("\t+ PageStart: %p\n", data->PageStart);
-			  printf("\t+ PageSize: %x\n", data->PageSize);
+			  printf("\t+ PageHash: ", data->PageHash);
+			  for (BYTE b : hwid)
+			  {
+				  printf("%02x", b);
+			  }
+			  printf("\n");
+		  } break;
+		  case REPORT_ID_HASH:
+		  {
+			  REPORT_HASH* data = (REPORT_HASH*)&report->Data;
+			  printf("REPORT_ID_HASH:\n");
 			  printf("\t+ HashIndex: %u\n", data->HashIndex);
+			  printf("\t+ PageStart: %p\n", data->PageStart);
 		  } break;
 		  }
 
