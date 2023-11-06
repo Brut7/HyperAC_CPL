@@ -57,6 +57,13 @@ int main() {
 			  printf("\t+ HashIndex: %u\n", data->HashIndex);
 			  printf("\t+ PageStart: %p\n", data->PageStart);
 		  } break;
+		  case REPORT_ID_BLOCKED_PROCESS:
+		  {
+			  REPORT_BLOCKED_PROCESS* data = (REPORT_BLOCKED_PROCESS*)&report->Data;
+			  printf("REPORT_ID_BLOCKED_PROCESS:\n");
+			  printf("\t+ ProcessId: %u\n", data->ProcessId);
+			  printf("\t+ ImageName: %s\n", data->ImageName);
+		  } break;
 		  }
 
 		  printf("\n");

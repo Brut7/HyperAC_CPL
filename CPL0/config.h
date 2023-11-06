@@ -31,7 +31,7 @@ extern PDRIVER_OBJECT g_DriverObject;
 extern UNICODE_STRING g_DeviceName;
 extern UNICODE_STRING g_SymbolicLinkName;
 
-extern HANDLE g_ObRegistrationHandle;
+extern PVOID g_ObRegistrationHandle;
 extern BOOLEAN g_ProcessCallbackRegistered;
 
 extern PEPROCESS g_GameProcess;

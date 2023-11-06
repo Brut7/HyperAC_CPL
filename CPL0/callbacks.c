@@ -48,23 +48,82 @@ VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT
 	}
 }
 
-OB_PREOP_CALLBACK_STATUS OnHandleCreation(_In_ PVOID Context, _Inout_ POB_PRE_OPERATION_INFORMATION OpInfo)
+OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB_PRE_OPERATION_INFORMATION OpInfo)
 {
 	UNREFERENCED_PARAMETER(Context);
 	PAGED_CODE();
 	
-	OB_PREOP_CALLBACK_STATUS status = OB_PREOP_SUCCESS;
+	PEPROCESS process = NULL;
+	PEPROCESS parent_process = NULL;
+	HANDLE process_id = NULL;
+	PCHAR image_name = NULL;
+	PACCESS_MASK create_access = NULL;
+	PACCESS_MASK dupli_access = NULL;
+	PREPORT_NODE report = NULL;
+	PREPORT_BLOCKED_PROCESS data = NULL;
 
-	if (g_GameProcess != (PEPROCESS)OpInfo->Object)
+
+	process = (PEPROCESS)OpInfo->Object;
+	process_id = PsGetProcessId(process);
+	
+	if (g_GameProcess == process && g_GameProcessId == process_id)
 	{
-		return status;
+		create_access = &OpInfo->Parameters->CreateHandleInformation.DesiredAccess;
+		dupli_access = &OpInfo->Parameters->DuplicateHandleInformation.DesiredAccess;
+		parent_process = IoGetCurrentProcess();
+		image_name = PsGetProcessImageFileName(parent_process);
+
+		// WHITELISTED PROCESSES MUST BE VALIDATED FURTHER
+		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
+		{
+			goto ExitCallback;
+		}
+
+		*create_access = PROCESS_QUERY_LIMITED_INFORMATION;
+		*dupli_access = PROCESS_QUERY_LIMITED_INFORMATION;
+
+		if (!strcmp(image_name, "dwm.exe") || !strcmp(image_name, "audiodg.exe")
+			|| !strcmp(image_name, "svchost.exe") || !strcmp(image_name, "UnityCrashHand") 
+			|| !strcmp(image_name, "ctfmon.exe") || !strcmp(image_name, "Crab Game.exe"))
+		{
+			goto ExitCallback;
+		}
+
+		DebugMessage("Unknown process blocked (%s)\n", image_name);
+
+		report = MMU_Alloc(REPORT_HEADER_SIZE + sizeof(REPORT_BLOCKED_PROCESS));
+		report->Id = REPORT_ID_BLOCKED_PROCESS;
+		report->DataSize = sizeof(REPORT_BLOCKED_PROCESS);
+
+		data = (REPORT_BLOCKED_PROCESS*)&report->Data;
+		data->ProcessId = process_id;
+		strcpy(data->ImageName, image_name);
+
+		if (!InsertReportNode(report))
+		{
+			MMU_Free(report);
+		}
 	}
 
-	DebugMessage("Handle creation for game process\n");
+ExitCallback:
+	return OB_PREOP_SUCCESS;
+}
+
+
+OB_PREOP_CALLBACK_STATUS OnThreadHandleCreation(_In_ PVOID Context, _Inout_ POB_PRE_OPERATION_INFORMATION OpInfo)
+{
+	UNREFERENCED_PARAMETER(Context);
+	PAGED_CODE();
+
+	OB_PREOP_CALLBACK_STATUS status = OB_PREOP_SUCCESS;
+
+
+	return status;
 }
 
 VOID OnProcessCreation(_In_ HANDLE ParentId, _In_ HANDLE ProcessId, _In_ BOOLEAN Create)
 {
+	UNREFERENCED_PARAMETER(ParentId);
 	PAGED_CODE();
 
 	PEPROCESS process = NULL;
@@ -75,35 +134,32 @@ VOID OnProcessCreation(_In_ HANDLE ParentId, _In_ HANDLE ProcessId, _In_ BOOLEAN
 	status = PsLookupProcessByProcessId(ProcessId, &process);
 	if (!NT_SUCCESS(status))
 	{
-		goto ExitCallback;
-	}
-
-	image_name = (CHAR*)((ULONG64)process + 0x5a8);
-	process_id = *(HANDLE*)((ULONG64)process + 0x440);
-
-	if (!strcmp(image_name, "Crab Game.exe"))
-	{
-		if (Create)
-		{
-			g_GameProcess = process;
-			g_GameProcessId = process_id;
-			DebugMessage("Game process created\n");
-		}
-		else
-		{
-			ObfDereferenceObject(g_GameProcess);
-			DebugMessage("Game process closed\n");
-		}
-
 		return;
 	}
 
-ExitCallback:
+	image_name = PsGetProcessImageFileName(process);
+	process_id = PsGetProcessId(process);
 
-	if (process != NULL)
+	if (Create && (g_GameProcess == NULL || g_GameProcessId == 0))
 	{
-		ObfDereferenceObject(process);
+		if (!strcmp(image_name, "Crab Game.exe"))
+		{
+			g_GameProcess = process;
+			g_GameProcessId = process_id;
+			DebugMessage("Game process created");
+			return;
+		}
 	}
+	else if (g_GameProcess != NULL && process_id == g_GameProcessId)
+	{
+		ObfDereferenceObject(g_GameProcess);
+		g_GameProcess = NULL;
+		g_GameProcessId = 0;
+		DebugMessage("Game process closed");
+		return;
+	}
+
+	ObfDereferenceObject(process);
 }
 
 NTSTATUS RegisterCallbacks(VOID)
@@ -111,25 +167,30 @@ NTSTATUS RegisterCallbacks(VOID)
 	PAGED_CODE();
 
 	NTSTATUS status = STATUS_SUCCESS;
-	/*OB_CALLBACK_REGISTRATION ob_callback = { 0 };
-	POB_OPERATION_REGISTRATION op_reg = NULL;
+	OB_CALLBACK_REGISTRATION ob_callback = { 0 };
+	OB_OPERATION_REGISTRATION op[2] = { 0 };
 	
-	ob_callback.Version = OB_FLT_REGISTRATION_VERSION;
-	ob_callback.OperationRegistrationCount = 1;
-	ob_callback.RegistrationContext = NULL;
+	op[0].ObjectType = PsProcessType;
+	op[0].Operations = OB_OPERATION_HANDLE_CREATE | OB_OPERATION_HANDLE_DUPLICATE;
+	op[0].PreOperation = OnProcessHandleCreation;
+	op[0].PostOperation = NULL;
 
-	op_reg = &ob_callback.OperationRegistration[0];
-	op_reg->ObjectType = PsProcessType;
-	op_reg->Operations = OB_OPERATION_HANDLE_CREATE;
-	op_reg->PreOperation = OnHandleCreation;
-	op_reg->PostOperation = NULL;
+	op[1].ObjectType = PsThreadType;
+	op[1].Operations = OB_OPERATION_HANDLE_CREATE | OB_OPERATION_HANDLE_DUPLICATE;
+	op[1].PreOperation = OnThreadHandleCreation;
+	op[1].PostOperation = NULL;
+
+	ob_callback.Version = OB_FLT_REGISTRATION_VERSION;
+	ob_callback.OperationRegistrationCount = ARRAYSIZE(op);
+	ob_callback.RegistrationContext = NULL;
+	ob_callback.OperationRegistration = op;
 
 	status = ObRegisterCallbacks(&ob_callback, &g_ObRegistrationHandle);
 	if (!NT_SUCCESS(status))
 	{
 		DebugMessage("ObRegisterCallbacks failed: 0x%08X\n", status);
 		return status;
-	}*/
+	}
 
 	status = PsSetCreateProcessNotifyRoutine(OnProcessCreation, FALSE);
 	if (!NT_SUCCESS(status))
@@ -138,8 +199,8 @@ NTSTATUS RegisterCallbacks(VOID)
 		UnregisterCallbacks();
 		return status;
 	}
-	g_ProcessCallbackRegistered = TRUE;
 
+	g_ProcessCallbackRegistered = TRUE;
 	return status;
 }
 
@@ -147,10 +208,11 @@ NTSTATUS UnregisterCallbacks(VOID)
 {
 	PAGED_CODE();
 
-	//if (g_ObRegistrationHandle != NULL)
-	//{
-	//	ObUnRegisterCallbacks(g_ObRegistrationHandle);
-	//}
+	if (g_ObRegistrationHandle != NULL)
+	{
+		ObUnRegisterCallbacks(g_ObRegistrationHandle);
+		g_ObRegistrationHandle = NULL;
+	}
 
 	if (g_ProcessCallbackRegistered == TRUE)
 	{
