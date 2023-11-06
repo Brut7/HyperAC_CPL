@@ -1,5 +1,6 @@
 #include "config.h"
 #include "spinlock.h"
+#include "report.h"
 
 volatile LONG64 g_AllocCount = 0;
 volatile LONG64 g_FreeCount = 0;
@@ -15,3 +16,31 @@ SPINLOCK g_ReportLock = { 0 };
 PDRIVER_OBJECT g_DriverObject = NULL;
 UNICODE_STRING g_DeviceName = RTL_CONSTANT_STRING(L"\\Device\\HyperAC");
 UNICODE_STRING g_SymbolicLinkName = RTL_CONSTANT_STRING(L"\\??\\HyperAC");
+
+PVOID g_ObRegistrationHandle = NULL;
+BOOLEAN g_ProcessCallbackRegistered = FALSE;
+
+PEPROCESS g_GameProcess = NULL;
+HANDLE g_GameProcessId = NULL;
+
+VOID FreeConfig(VOID)
+{
+    PAGED_CODE();
+
+    if (g_ScannerThread != NULL)
+    {
+        ZwClose(g_ScannerThread);
+    }
+
+    if (g_MainThread != NULL)
+    {
+        ZwClose(g_MainThread);
+    }
+
+    if (g_GameProcess != NULL)
+    {
+        ObfDereferenceObject(g_GameProcess);
+    }
+
+    FreeReportList();
+}

@@ -9,12 +9,13 @@
     <ClCompile Include="hwid.c" />
     <ClCompile Include="report.c" />
     <ClCompile Include="hv.c" />
-    <ClCompile Include="main.c" />
+    <ClCompile Include="threads.c" />
     <ClCompile Include="config.c" />
     <ClCompile Include="spinlock.c" />
     <ClCompile Include="flow.c" />
     <ClCompile Include="memory.c" />
     <ClCompile Include="pt.c" />
+    <ClCompile Include="callbacks.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
@@ -27,11 +28,12 @@
     <ClInclude Include="common.h" />
     <ClInclude Include="report.h" />
     <ClInclude Include="hv.h" />
-    <ClInclude Include="main.h" />
+    <ClInclude Include="threads.h" />
     <ClInclude Include="spinlock.h" />
     <ClInclude Include="flow.h" />
     <ClInclude Include="ia32.h" />
     <ClInclude Include="memory.h" />
     <ClInclude Include="pt.h" />
+    <ClInclude Include="callbacks.h" />
   </ItemGroup>
 </Project>

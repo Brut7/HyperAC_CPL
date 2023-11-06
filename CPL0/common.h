@@ -3,6 +3,8 @@
 
 #include <ntifs.h>
 
+#define STATIC static
+
 #define TABLE_SIZE 512
 
 // Size=32
@@ -290,5 +292,16 @@ NTSTATUS NTAPI MmCopyVirtualMemory
     KPROCESSOR_MODE PreviousMode,
     PSIZE_T ReturnSize
 );
+
+typedef struct _SCAN_HASH
+{
+    UCHAR SHA256[32];
+}SCAN_HASH, * PSCAN_HASH;
+
+typedef struct _SCAN_CONTEXT
+{
+    USHORT HashCount;
+    PSCAN_HASH Hashes;
+}SCAN_CONTEXT, * PSCAN_CONTEXT;
 
 #endif // H_COMMON

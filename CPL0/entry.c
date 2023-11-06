@@ -5,9 +5,10 @@
 
 #include "config.h"
 #include "ioctl.h"
-#include "main.h"
+#include "threads.h"
 #include "common.h"
 #include "flow.h"
+#include "callbacks.h"
 
 static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
 {
@@ -15,27 +16,20 @@ static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
     PAGED_CODE();
 
     InterlockedExchange(&g_UnloadThreads, TRUE);
+
+    UnregisterCallbacks();
+    FreeConfig();
+
+    IoDeleteSymbolicLink(&g_SymbolicLinkName);
+    IoDeleteDevice(DriverObject->DeviceObject);
+
     while (InterlockedExchange8(&g_ThreadCount, g_ThreadCount) > 0)
     {
         Sleep(1);
     }
-
-    if (g_MainThread != NULL)
-    {
-        ZwClose(g_MainThread);
-    }
-
-    if (g_ScannerThread != NULL)
-    {
-        ZwClose(g_ScannerThread);
-    }
-
-    FreeReportList(&g_ReportHead);
-    
+   
     DebugMessage("Freed: %u / Allocated: %u", g_FreeCount, g_AllocCount);
 
-    IoDeleteSymbolicLink(&g_SymbolicLinkName);
-    IoDeleteDevice(DriverObject->DeviceObject);
 }
 
 NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
@@ -86,6 +80,14 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
         DebugMessage("PsCreateSystemThread failed: 0x%08X\n", status);
         DriverUnload(DriverObject);
         return status;
+    }
+
+    status = RegisterCallbacks();
+    if (!NT_SUCCESS(status))
+    {
+		DebugMessage("RegisterCallbacks failed: 0x%08X\n", status);
+		DriverUnload(DriverObject);
+		return STATUS_UNSUCCESSFUL;
     }
 
     return status;

@@ -16,5 +16,6 @@ VOID FreeReportList();
 #pragma alloc_text(PAGE, FreeReportList)
 #pragma alloc_text(PAGE, GetReportCount)
 #pragma alloc_text(PAGE, GetReportNode)
+#pragma alloc_text(PAGE, GetReportNode)
 
 #endif // H_REPORT

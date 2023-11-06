@@ -4,6 +4,7 @@
 #include <ntifs.h>
 #include "report.h"
 #include "spinlock.h"
+#include "common.h"
 
 #define DebugMessage(msg, ...) \
   DbgPrintEx(0, 0, "[" __FUNCTION__ "] " msg, __VA_ARGS__)
@@ -29,5 +30,15 @@ extern SPINLOCK g_ReportLock;
 extern PDRIVER_OBJECT g_DriverObject;
 extern UNICODE_STRING g_DeviceName;
 extern UNICODE_STRING g_SymbolicLinkName;
+
+extern HANDLE g_ObRegistrationHandle;
+extern BOOLEAN g_ProcessCallbackRegistered;
+
+extern PEPROCESS g_GameProcess;
+extern HANDLE g_GameProcessId;
+
+VOID FreeConfig(VOID);
+
+#pragma alloc_text(PAGE, FreeConfig)
 
 #endif// H_CONFIG
