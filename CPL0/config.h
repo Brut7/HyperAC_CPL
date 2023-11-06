@@ -8,6 +8,9 @@
 #define DebugMessage(msg, ...) \
   DbgPrintEx(0, 0, "[" __FUNCTION__ "] " msg, __VA_ARGS__)
 
+#define FAST_FAIL_POOL_ERROR 0x23
+#define FAST_FAIL_CORRUPTED_REPORT_LIST 0x24
+
 extern volatile LONG g_AllocCount;
 extern volatile LONG g_FreeCount;
 
@@ -17,6 +20,7 @@ extern HANDLE g_MainThread;
 extern HANDLE g_SigScanThread;
 
 extern REPORT_NODE g_ReportHead;
+extern REPORT_NODE g_ShadowReportHead;
 extern SPINLOCK g_ReportLock;
 
 extern PDRIVER_OBJECT g_DriverObject;

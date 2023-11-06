@@ -39,7 +39,7 @@ NTSTATUS IOCTL_GetReportsSize(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
     req = *(CPL0_GET_REPORTS_SIZE_REQ*)Buffer;
     res = (PCPL0_GET_REPORTS_SIZE_RES)Buffer;
 
-    report_count = GetReportCount(&g_ReportHead);
+    report_count = GetReportCount();
     if (report_count == 0)
     {
         *pSize = sizeof(CPL0_GET_REPORTS_SIZE_RES);
@@ -48,18 +48,16 @@ NTSTATUS IOCTL_GetReportsSize(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
 
     for (USHORT i = 0; i < report_count; ++i)
     {
-		report = GetReportNode(&g_ReportHead, i);
+		report = GetReportNode(i);
 		if (report == NULL)
 		{
-			*pSize = sizeof(CPL0_GET_REPORTS_SIZE_RES);
-			return STATUS_SUCCESS;
+            break;
 		}
 
-        total_size += sizeof(REPORT_NODE) - sizeof(report->Data) + report->DataSize;
+        total_size += REPORT_HEADER_SIZE + report->DataSize;
     }
 
     res->Size = total_size;
-
     *pSize = sizeof(CPL0_GET_REPORTS_SIZE_RES);
     return STATUS_SUCCESS;
 }
@@ -75,6 +73,7 @@ NTSTATUS IOCTL_GetReports(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
     SIZE_T size_left = 0;
     SIZE_T total_size = 0;
     USHORT node_index = 0;
+    SIZE_T node_size = 0;
     PVOID cursor = NULL;
 
     req = *(CPL0_GET_REPORTS_REQ*)Buffer;
@@ -82,7 +81,7 @@ NTSTATUS IOCTL_GetReports(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
 
     total_size = req.Size;
 
-    report_count = GetReportCount(&g_ReportHead);
+    report_count = GetReportCount();
     if (report_count == 0)
     {
         *pSize = sizeof(CPL0_GET_REPORTS_RES);
@@ -93,7 +92,7 @@ NTSTATUS IOCTL_GetReports(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
     cursor = res->Reports;
     while (size_left)
     {
-        report = GetReportNode(&g_ReportHead, node_index);
+        report = GetReportNode(node_index);
         if (report == NULL)
         {
             *pSize = sizeof(CPL0_GET_REPORTS_RES) - size_left;
@@ -105,13 +104,13 @@ NTSTATUS IOCTL_GetReports(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
             break;
         }
 
-        memcpy(cursor, report, sizeof(REPORT_NODE) - sizeof(report->Data) + report->DataSize);
-        cursor = (PVOID)((ULONG_PTR)cursor + sizeof(REPORT_NODE) - sizeof(report->Data) + report->DataSize);
-        size_left -= sizeof(REPORT_NODE) - sizeof(report->Data) + report->DataSize;
+        node_size = REPORT_HEADER_SIZE + report->DataSize;
+        memcpy(cursor, report, node_size);
+        cursor = (PVOID)((ULONG64)cursor + node_size);
+        size_left -= node_size;
 
         ++node_index;
     }
-
 
     *pSize = total_size;
     return STATUS_SUCCESS;

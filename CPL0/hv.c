@@ -3,6 +3,7 @@
 #include "common.h"
 #include "config.h"
 #include "ia32.h"
+#include "mmu.h"
 #include <intrin.h>
 #include <ioc.h>
 
@@ -42,13 +43,22 @@ VOID PeformVmExitCheck(VOID)
 
 	if (avg_tsc > NORMAL_AVG_TSC)
 	{
-		report = InsertReportNode(&g_ReportHead, sizeof(REPORT_HYPERVISOR));
-		data = (REPORT_HYPERVISOR*)&report->Data;
+		report = MMU_Alloc(REPORT_HEADER_SIZE + sizeof(REPORT_HYPERVISOR));
+		if (!report)
+		{
+			__fastfail(FAST_FAIL_POOL_ERROR);
+			return;
+		}
 
 		report->Id = REPORT_ID_HYPERVISOR;
 		report->DataSize = sizeof(REPORT_HYPERVISOR);
 
+		data = (REPORT_SIGNATURE*)&report->Data;
 		data->Tsc = avg_tsc;
+		if (!InsertReportNode(report))
+		{
+			MMU_Free(report);
+		}
 	}
 }
 

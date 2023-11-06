@@ -3,117 +3,132 @@
 #include "config.h"
 #include "spinlock.h"
 
-REPORT_NODE* GetReportNode(_In_ REPORT_NODE* Head, _In_ USHORT Index)
+VOID ValidateReportList()
 {
-	PAGED_CODE();
+    PAGED_CODE();
 
-	REPORT_NODE* node = NULL;
-	USHORT count = 0;
+    REPORT_NODE* node = NULL;
+    USHORT count = 0;
 
-	if (Head == NULL)
-	{
-		return NULL;
-	}
+    SpinlockAcquire(&g_ReportLock);
 
-	SpinlockAcquire(&g_ReportLock);
+    node = g_ReportHead.Next;
+    while (node)
+    {
+        if (node->Index != count)
+        {
+            __fastfail(FAST_FAIL_CORRUPTED_REPORT_LIST);
+            return;
+        }
 
-	node = Head->Next;
-	while (node)
-	{
-		if (count == Index)
-		{
-			break;
-		}
+        node = node->Next;
+        ++count;
+    }
 
-		++count;
-		node = node->Next;
-	}
-
-	SpinlockRelease(&g_ReportLock);
-	return node;
+    SpinlockRelease(&g_ReportLock);
 }
 
-USHORT GetReportCount(_In_ REPORT_NODE* Head)
+REPORT_NODE* GetReportNode(_In_ USHORT Index)
 {
-	PAGED_CODE();
+    PAGED_CODE();
 
-	USHORT count = 0;
-	REPORT_NODE* node = NULL;
+    REPORT_NODE* node = NULL;
+    USHORT count = 0;
 
-	if (Head == NULL)
-	{
-		return 0;
-	}
+    SpinlockAcquire(&g_ReportLock);
 
-	SpinlockAcquire(&g_ReportLock);
+    node = g_ReportHead.Next;
+    while (node && count < Index)
+    {
+        node = node->Next;
+        ++count;
+    }
 
-	node = Head->Next;
-	while (node)
-	{
-		++count;
-		node = node->Next;
-	}
-
-	SpinlockRelease(&g_ReportLock);
-	return count;
+    SpinlockRelease(&g_ReportLock);
+    return (count == Index) ? node : NULL;
 }
 
-REPORT_NODE* InsertReportNode(_In_ REPORT_NODE* Head, _In_ SIZE_T DataSize)
+USHORT GetReportCount()
 {
-	PAGED_CODE();
+    PAGED_CODE();
 
-	if (Head == NULL)
-	{
-		return NULL;
-	}
+    USHORT count = 0;
+    REPORT_NODE* node = NULL;
 
-	// MUST CHECK IF REPORT ALREADY EXISTS
+    SpinlockAcquire(&g_ReportLock);
 
-	REPORT_NODE* last = Head;
-	REPORT_NODE* node = NULL;
+    node = g_ReportHead.Next;
+    while (node)
+    {
+        ++count;
+        node = node->Next;
+    }
 
-	SpinlockAcquire(&g_ReportLock);
-	while (last->Next)
-	{
-		last = last->Next;
-	}
-
-	node = (REPORT_NODE*)MMU_Alloc(DataSize + sizeof(REPORT_NODE) - sizeof(node->Data));
-	if (node == NULL)
-	{
-		return NULL;
-	}
-
-	memset((void*)((ULONG64)node + sizeof(REPORT_NODE) - sizeof(node->Data)), 0, DataSize);
-	last->Next = node;
-
-	SpinlockRelease(&g_ReportLock);
-	return node;
+    SpinlockRelease(&g_ReportLock);
+    return count;
 }
 
-VOID FreeReportList(_In_ REPORT_NODE* Head)
+BOOLEAN InsertReportNode(_In_ REPORT_NODE* NewNode)
 {
-	PAGED_CODE();
+    PAGED_CODE();
 
-	REPORT_NODE* node = NULL;
-	REPORT_NODE* next = NULL;
+    USHORT count = 0;
+    REPORT_NODE* node = NULL;
+    REPORT_NODE* last = NULL;
 
-	if (Head == NULL)
-	{
-		return;
-	}
+    if (NewNode == NULL)
+    {
+        return FALSE;
+    }
 
-	SpinlockAcquire(&g_ReportLock);
+    SpinlockAcquire(&g_ReportLock);
 
-	node = Head->Next;
-	next = node;
+    node = g_ReportHead.Next;
+    if (node == NULL)
+    {
+        NewNode->Index = 0;
+        g_ReportHead.Next = NewNode;
+        SpinlockRelease(&g_ReportLock);
+        return TRUE;
+    }
 
-	while (next)
-	{
-		next = node->Next;
-		MMU_Free(node);
-		node = next;
-	}
+    while (node != NULL)
+    {
+        if (node->DataSize == NewNode->DataSize && node->Id == NewNode->Id
+            && !memcmp(node->Data, NewNode->Data, NewNode->DataSize))
+        {
+            SpinlockRelease(&g_ReportLock);
+            return FALSE;
+        }
 
-	SpinlockRelease(&g_ReportLock);
+        last = node;
+        node = node->Next;
+        ++count;
+    }
+
+    NewNode->Index = count;
+    last->Next = NewNode;
+    SpinlockRelease(&g_ReportLock);
+    return TRUE;
+}
+
+VOID FreeReportList()
+{
+    PAGED_CODE();
+
+    REPORT_NODE* node = NULL;
+    REPORT_NODE* next = NULL;
+
+    SpinlockAcquire(&g_ReportLock);
+
+    node = g_ReportHead.Next;
+    while (node)
+    {
+        next = node->Next;
+        MMU_Free(node);
+        node = next;
+    }
+
+    g_ReportHead.Next = NULL;
+    SpinlockRelease(&g_ReportLock);
 }

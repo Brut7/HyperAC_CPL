@@ -5,6 +5,7 @@
 #include "flow.h"
 #include "memory.h"
 #include "sha256.h"
+#include "mmu.h"
 
 
 UCHAR g_hashes[4][32] = {
@@ -36,7 +37,13 @@ static VOID OnEachPage(_In_ ULONG64 PageStart, _In_ SIZE_T PageSize, _In_opt_ PV
 		{
 			DebugMessage("Found hash at 0x%llx\n", PageStart);
 
-			report = InsertReportNode(&g_ReportHead, sizeof(REPORT_SIGNATURE));
+			report = MMU_Alloc(REPORT_HEADER_SIZE + sizeof(REPORT_SIGNATURE));
+			if (!report)
+			{
+				__fastfail(FAST_FAIL_POOL_ERROR);
+				return;
+			}
+			
 			report->Id = REPORT_ID_SIGNATURE;
 			report->DataSize = sizeof(REPORT_SIGNATURE);
 
@@ -44,6 +51,11 @@ static VOID OnEachPage(_In_ ULONG64 PageStart, _In_ SIZE_T PageSize, _In_opt_ PV
 			data->HashIndex = i;
 			data->PageStart = PageStart;
 			data->PageSize = PageSize;
+
+			if (!InsertReportNode(report))
+			{
+				MMU_Free(report);
+			}
 		}
 	}
 }
@@ -59,11 +71,11 @@ VOID SigScanThread(_In_opt_ PVOID Context)
 	InterlockedIncrement(&g_ThreadCount);
 	
 	// hash some func in ntoskrnl to test
-
 	sha256_init(&sha256_ctx);
 	sha256_update(&sha256_ctx, (PVOID)((ULONG64)&ExAllocatePool & ~0xFFF), PAGE_SIZE);
 	sha256_final(&sha256_ctx, &g_hashes[1]);
 	
+	BOOLEAN corr = FALSE;
 	while (g_Unloading == FALSE)
 	{
 		cr3.AsUInt = __readcr3();
@@ -83,8 +95,10 @@ VOID MainThread(_In_opt_ PVOID Context)
 
 	while (g_Unloading == FALSE)
 	{
-	
-		Sleep(500);
+		ValidateReportList();
+
+
+		Sleep(1);
 	}
 
 	InterlockedDecrement(&g_ThreadCount);

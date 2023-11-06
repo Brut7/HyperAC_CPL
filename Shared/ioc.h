@@ -14,6 +14,8 @@
 
 #include <minwindef.h>
 
+#define REPORT_HEADER_SIZE (sizeof(REPORT_NODE) - sizeof(BYTE))
+
 typedef enum _REPORT_ID
 {
 	REPORT_ID_NONE = 0,
@@ -24,6 +26,7 @@ typedef enum _REPORT_ID
 typedef struct _REPORT_NODE
 {
 	struct _REPORT_NODE* Next;
+	USHORT Index;
 	REPORT_ID Id;
 	USHORT DataSize;
 	BYTE Data[1];

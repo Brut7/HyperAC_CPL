@@ -35,8 +35,6 @@ array<BYTE, 32> cpl0_c::GetHWID(CPL0_GET_HWID_TYPE Type) const
     return hash;
 }
 
-
-
 SIZE_T cpl0_c::GetReportsSize() const
 {
     CPL0_GET_REPORTS_SIZE_REQ req;
@@ -46,8 +44,14 @@ SIZE_T cpl0_c::GetReportsSize() const
 
 vector<unique_ptr<REPORT_NODE>> cpl0_c::GetReports() const
 {
-    size_t reports_size = GetReportsSize();
-    unique_ptr<char[]> reports_data(new (nothrow) char[reports_size]);
+    SIZE_T reports_size = GetReportsSize();
+    printf("reports_size: %d\n", reports_size);
+    if (!reports_size)
+    {
+        return {};
+    }
+
+    unique_ptr<char[]> reports_data(new char[reports_size]);
     if (!reports_data)
     {
         return {};
@@ -67,7 +71,7 @@ vector<unique_ptr<REPORT_NODE>> cpl0_c::GetReports() const
     while (size_left > 0)
     {
         REPORT_NODE* report = (REPORT_NODE*)cursor;
-        SIZE_T node_size = sizeof(REPORT_NODE) - sizeof(report->Data) + report->DataSize;
+        SIZE_T node_size = REPORT_HEADER_SIZE + report->DataSize;
         unique_ptr<REPORT_NODE> node((REPORT_NODE*)(new char[node_size]));
         if (!node)
         {
