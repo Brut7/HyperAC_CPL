@@ -16,6 +16,7 @@
     <ClCompile Include="memory.c" />
     <ClCompile Include="pt.c" />
     <ClCompile Include="callbacks.c" />
+    <ClCompile Include="drivers.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
@@ -35,5 +36,6 @@
     <ClInclude Include="memory.h" />
     <ClInclude Include="pt.h" />
     <ClInclude Include="callbacks.h" />
+    <ClInclude Include="drivers.h" />
   </ItemGroup>
 </Project>

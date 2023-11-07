@@ -1,6 +1,7 @@
 #include "config.h"
 #include "spinlock.h"
 #include "report.h"
+#include "mmu.h"
 
 volatile LONG64 g_AllocCount = 0;
 volatile LONG64 g_FreeCount = 0;
@@ -23,6 +24,9 @@ BOOLEAN g_ProcessCallbackRegistered = FALSE;
 PEPROCESS g_GameProcess = NULL;
 HANDLE g_GameProcessId = NULL;
 
+SPINLOCK g_SystemModulesLock = { 0 };
+SYSTEM_MODULES g_SystemModules = { 0 };
+
 VOID FreeConfig(VOID)
 {
     PAGED_CODE();
@@ -40,6 +44,12 @@ VOID FreeConfig(VOID)
     if (g_GameProcess != NULL)
     {
         ObfDereferenceObject(g_GameProcess);
+    }
+
+    if (g_SystemModules.Modules != NULL)
+    {
+        g_SystemModules.Count = 0;
+        MMU_Free(g_SystemModules.Modules);
     }
 
     FreeReportList();

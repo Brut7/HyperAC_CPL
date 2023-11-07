@@ -55,48 +55,37 @@ OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB
 	
 	PEPROCESS process = NULL;
 	PEPROCESS parent_process = NULL;
+	HANDLE parent_process_id = NULL;
 	HANDLE process_id = NULL;
 	PCHAR image_name = NULL;
-	PACCESS_MASK create_access = NULL;
-	PACCESS_MASK dupli_access = NULL;
 	PREPORT_NODE report = NULL;
 	PREPORT_BLOCKED_PROCESS data = NULL;
 
-
 	process = (PEPROCESS)OpInfo->Object;
 	process_id = PsGetProcessId(process);
-	
-	if (g_GameProcess == process && g_GameProcessId == process_id)
-	{
-		create_access = &OpInfo->Parameters->CreateHandleInformation.DesiredAccess;
-		dupli_access = &OpInfo->Parameters->DuplicateHandleInformation.DesiredAccess;
-		parent_process = IoGetCurrentProcess();
-		image_name = PsGetProcessImageFileName(parent_process);
+	parent_process = IoGetCurrentProcess();
+	parent_process_id = PsGetProcessId(parent_process);
+	image_name = PsGetProcessImageFileName(parent_process);
 
+	if (g_GameProcess == process && g_GameProcessId == process_id && parent_process != g_GameProcess)
+	{
+		
 		// WHITELISTED PROCESSES MUST BE VALIDATED FURTHER
 		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
 		{
 			goto ExitCallback;
 		}
 
-		*create_access = PROCESS_QUERY_LIMITED_INFORMATION;
-		*dupli_access = PROCESS_QUERY_LIMITED_INFORMATION;
-
-		if (!strcmp(image_name, "dwm.exe") || !strcmp(image_name, "audiodg.exe")
-			|| !strcmp(image_name, "svchost.exe") || !strcmp(image_name, "UnityCrashHand") 
-			|| !strcmp(image_name, "ctfmon.exe") || !strcmp(image_name, "Crab Game.exe"))
-		{
-			goto ExitCallback;
-		}
-
 		DebugMessage("Unknown process blocked (%s)\n", image_name);
-
+		OpInfo->Parameters->CreateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
+		OpInfo->Parameters->DuplicateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
+		
 		report = MMU_Alloc(REPORT_HEADER_SIZE + sizeof(REPORT_BLOCKED_PROCESS));
 		report->Id = REPORT_ID_BLOCKED_PROCESS;
 		report->DataSize = sizeof(REPORT_BLOCKED_PROCESS);
 
 		data = (REPORT_BLOCKED_PROCESS*)&report->Data;
-		data->ProcessId = process_id;
+		data->ProcessId = parent_process_id;
 		strcpy(data->ImageName, image_name);
 
 		if (!InsertReportNode(report))
@@ -109,16 +98,58 @@ ExitCallback:
 	return OB_PREOP_SUCCESS;
 }
 
-
 OB_PREOP_CALLBACK_STATUS OnThreadHandleCreation(_In_ PVOID Context, _Inout_ POB_PRE_OPERATION_INFORMATION OpInfo)
 {
 	UNREFERENCED_PARAMETER(Context);
 	PAGED_CODE();
 
-	OB_PREOP_CALLBACK_STATUS status = OB_PREOP_SUCCESS;
+	PEPROCESS process = NULL;
+	PEPROCESS parent_process = NULL;
+	HANDLE parent_process_id = NULL;
+	HANDLE thread_id = NULL;
+	PKTHREAD thread = NULL;
+	HANDLE process_id = NULL;
+	PCHAR image_name = NULL;
+	PREPORT_NODE report = NULL;
+	PREPORT_BLOCKED_THREAD data = NULL;
 
 
-	return status;
+	thread = (PKTHREAD)OpInfo->Object;
+	thread_id = PsGetThreadId(thread);
+	process = *(PEPROCESS*)((ULONG64)thread + 0x220);
+	process_id = PsGetProcessId(process);
+	parent_process = IoGetCurrentProcess();
+	parent_process_id = PsGetProcessId(parent_process);
+	image_name = PsGetProcessImageFileName(parent_process);
+
+	if (g_GameProcess == process && g_GameProcessId == process_id && parent_process != g_GameProcess)
+	{
+		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
+		{
+			goto ExitCallback;
+		}
+
+		DebugMessage("Unknown process blocked (%s)\n", image_name);
+		OpInfo->Parameters->CreateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
+		OpInfo->Parameters->DuplicateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
+
+		report = MMU_Alloc(REPORT_HEADER_SIZE + sizeof(REPORT_BLOCKED_THREAD));
+		report->Id = REPORT_ID_BLOCKED_THREAD;
+		report->DataSize = sizeof(REPORT_BLOCKED_THREAD);
+
+		data = (REPORT_BLOCKED_THREAD*)&report->Data;
+		data->ThreadId = thread_id;
+		data->ProcessId = parent_process_id;
+		strcpy(data->ImageName, image_name);
+
+		if (!InsertReportNode(report))
+		{
+			MMU_Free(report);
+		}
+	}
+
+ExitCallback:
+	return OB_PREOP_SUCCESS;
 }
 
 VOID OnProcessCreation(_In_ HANDLE ParentId, _In_ HANDLE ProcessId, _In_ BOOLEAN Create)

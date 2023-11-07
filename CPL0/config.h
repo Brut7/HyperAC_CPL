@@ -37,6 +37,9 @@ extern BOOLEAN g_ProcessCallbackRegistered;
 extern PEPROCESS g_GameProcess;
 extern HANDLE g_GameProcessId;
 
+extern SPINLOCK g_SystemModulesLock;
+extern SYSTEM_MODULES g_SystemModules;
+
 VOID FreeConfig(VOID);
 
 #pragma alloc_text(PAGE, FreeConfig)

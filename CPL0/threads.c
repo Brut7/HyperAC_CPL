@@ -8,6 +8,7 @@
 #include "mmu.h"
 #include "pt.h"
 #include "callbacks.h"
+#include "drivers.h"
 
 
 VOID ScannerThread(_In_opt_ PVOID Context)
@@ -19,12 +20,12 @@ VOID ScannerThread(_In_opt_ PVOID Context)
 	NTSTATUS status = STATUS_SUCCESS;
 
 	InterlockedIncrement(&g_ThreadCount);
-
+	
 	while (InterlockedExchange(&g_UnloadThreads, g_UnloadThreads) == FALSE)
 	{
 		ValidateReportList();
 
-		Sleep(100);
+		Sleep(800);
 	}
 
 ExitThread:
@@ -34,6 +35,13 @@ ExitThread:
 
 VOID MainThread(_In_opt_ PVOID Context)
 {
+	UNREFERENCED_PARAMETER(Context);
+	PAGED_CODE();
+
+	NTSTATUS status = STATUS_SUCCESS;
+
+
+
 	InterlockedIncrement(&g_ThreadCount);
 
 	PeformVmExitCheck();
@@ -41,6 +49,16 @@ VOID MainThread(_In_opt_ PVOID Context)
 	while (InterlockedExchange(&g_UnloadThreads, g_UnloadThreads) == FALSE)
 	{
 		ValidateReportList();
+
+		SpinlockAcquire(&g_SystemModulesLock);
+
+		if (g_SystemModules.Modules != NULL)
+		{
+			MMU_Free(g_SystemModules.Modules);
+		}
+
+		status = PopulateSystemModules(&g_SystemModules);
+		SpinlockRelease(&g_SystemModulesLock);
 
 		Sleep(100);
 	}

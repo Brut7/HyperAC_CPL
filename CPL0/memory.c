@@ -50,3 +50,10 @@ ULONG64 FindSignature(_In_ UCHAR* Data, _In_ SIZE_T Size, _In_ CONST CHAR* Patte
 
 	return 0;
 }
+
+NTSTATUS FindBacker(_In_ ULONG64 Address, _Out_opt_ CHAR* ModuleName)
+{
+	PAGED_CODE();
+
+	return STATUS_SUCCESS;
+}

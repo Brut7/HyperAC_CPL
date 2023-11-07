@@ -246,6 +246,19 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     MaxSystemInfoClass = 228
 }SYSTEM_INFORMATION_CLASS, *PSYSTEM_INFORMATION_CLASS;
 
+typedef struct _RTL_MODULE_EXTENDED_INFO
+{
+    PVOID ImageBase;
+    ULONG ImageSize;
+    USHORT FileNameOffset;
+    CHAR FullPathName[256];
+} RTL_MODULE_EXTENDED_INFO, * PRTL_MODULE_EXTENDED_INFO;
+
+typedef struct _SYSTEM_MODULES
+{
+    ULONG Count;
+    PRTL_MODULE_EXTENDED_INFO Modules;
+}SYSTEM_MODULES, * PSYSTEM_MODULES;
 
 #define PROCESS_TERMINATE                  (0x0001)  
 #define PROCESS_CREATE_THREAD              (0x0002)  
@@ -310,6 +323,12 @@ NTSTATUS NTAPI MmCopyVirtualMemory
 );
 
 PCHAR PsGetProcessImageFileName(PEPROCESS Process);
+
+NTSTATUS RtlQueryModuleInformation(
+    ULONG* InformationLength,
+    ULONG SizePerModule,
+    PVOID InformationBuffer
+);
 
 typedef struct _SCAN_HASH
 {

@@ -64,6 +64,14 @@ int main() {
 			  printf("\t+ ProcessId: %u\n", data->ProcessId);
 			  printf("\t+ ImageName: %s\n", data->ImageName);
 		  } break;
+		  case REPORT_ID_BLOCKED_THREAD:
+		  {
+			  REPORT_BLOCKED_THREAD* data = (REPORT_BLOCKED_THREAD*)&report->Data;
+			  printf("REPORT_ID_BLOCKED_THREAD:\n");
+			  printf("\t+ ProcessId: %u\n", data->ProcessId);
+			  printf("\t+ ThreadId: %u\n", data->ThreadId);
+			  printf("\t+ ImageName: %s\n", data->ImageName);
+		  } break;
 		  }
 
 		  printf("\n");
