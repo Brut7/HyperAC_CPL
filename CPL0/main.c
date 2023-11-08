@@ -34,8 +34,6 @@ VOID MainThread(_In_opt_ PVOID Context)
 	NTSTATUS status = STATUS_SUCCESS;
 	PWORK_QUEUE_ITEM worker = NULL;
 
-
-
 	InterlockedIncrement(&g_ThreadCount);
 
 	PeformVmExitCheck();
@@ -47,25 +45,13 @@ VOID MainThread(_In_opt_ PVOID Context)
 	//ExQueueWorkItem(worker, BackgroundWorkQueue);
 	//
 
-	RTL_MODULE_EXTENDED_INFO ci;
-	if (NT_SUCCESS(FindSystemModuleByName("CI.dll", &ci)))
-	{
-		DebugMessage("black men dont cheat %p (%s)", ci.ImageBase, ci.FullPathName);
-
-		ULONG64 CiCheckSignedFile = FindExport(ci.ImageBase, "CiCheckSignedFile");
-		DebugMessage("if ur gay, you got no cred: %p", CiCheckSignedFile);
-	}
-
-
 	while (InterlockedExchange(&g_UnloadThreads, g_UnloadThreads) == FALSE)
 	{
 		ValidateReportList();
 
-		// Allocate the work item
+		// DetectHiddenThreads();
 
-		//DetectHiddenThreads();
-
-		Sleep(1000);
+		Sleep(100);
 	}
 
 ExitThread:

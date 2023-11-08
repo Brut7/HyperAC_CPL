@@ -1,71 +1,140 @@
 #include "pe.h"
 #include "memory.h"
+#include "mmu.h"
 
-NTSTATUS SafeGetNtHeader(_In_ ULONG64 Base, _Out_ PIMAGE_NT_HEADERS* pNTH)
+PIMAGE_NT_HEADERS GetNtHeaders(_In_ ULONG64 Base)
 {
 	NTSTATUS status = STATUS_SUCCESS;
+	PIMAGE_NT_HEADERS nt = NULL;
 	IMAGE_DOS_HEADER dos = { 0 };
-	IMAGE_NT_HEADERS nt = { 0 };
 
-	status = SafeCopy(&dos, (CONST PVOID)Base, sizeof(dos));
+
+	status = SafeCopy(&dos, (CONST PVOID)Base, sizeof(IMAGE_DOS_HEADER));
 	if (!NT_SUCCESS(status) || dos.e_magic != IMAGE_DOS_SIGNATURE)
 	{
-		return status;
+		return NULL;
 	}
 
-	status = SafeCopy(&nt, (CONST PVOID)(Base + dos.e_lfanew), sizeof(nt));
-	if (!NT_SUCCESS(status) || nt.Signature != IMAGE_NT_SIGNATURE)
+	nt = MMU_Alloc(sizeof(IMAGE_NT_HEADERS));
+	status = SafeCopy(nt, (CONST PVOID)(Base + dos.e_lfanew), sizeof(IMAGE_NT_HEADERS));
+	if (!NT_SUCCESS(status) || nt->Signature != IMAGE_NT_SIGNATURE)
 	{
-		return status;
+		MMU_Free(nt);
+		return NULL;
 	}
 
-	*pNTH = (IMAGE_NT_HEADERS*)(Base + dos.e_lfanew);
-	return status;
+	return nt;
+}
+
+PIMAGE_EXPORT_DIRECTORY GetExportDirectory(_In_ ULONG64 Base, _In_ PIMAGE_NT_HEADERS Nt)
+{
+	PAGED_CODE();
+
+	LONG export_va = 0;
+	PIMAGE_EXPORT_DIRECTORY export_dir = NULL;
+	NTSTATUS status = STATUS_SUCCESS;
+
+	export_va = Nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+	if (export_va == 0)
+	{
+		return NULL;
+	}
+
+	export_dir = (PIMAGE_EXPORT_DIRECTORY)MMU_Alloc(sizeof(IMAGE_EXPORT_DIRECTORY));
+	status = SafeCopy(export_dir, (CONST PVOID)(Base + export_va), sizeof(IMAGE_EXPORT_DIRECTORY));
+	if (!NT_SUCCESS(status))
+	{
+		MMU_Free(export_dir);
+		return NULL;
+	}
+
+	return export_dir;
 }
 
 ULONG64 FindExport(_In_ ULONG64 Base, _In_ CONST CHAR* Name)
 {
 	PAGED_CODE();
 
-	PIMAGE_NT_HEADERS nt = NULL;
-	ULONG export_va = 0;
 	PIMAGE_EXPORT_DIRECTORY export_dir = NULL;
-	NTSTATUS status = STATUS_SUCCESS;
-	ULONG* export_names_va = NULL;
-	CHAR* export_name = NULL;
+	PIMAGE_NT_HEADERS nt = NULL;
 	USHORT* export_func_ord = NULL;
 	ULONG* export_func_va = NULL;
+	SIZE_T name_length = 0;
+	CHAR* export_name = NULL;
+	ULONG export_name_va = 0;
+	NTSTATUS status = STATUS_SUCCESS;
 
 	if (Base == 0)
 	{
 		return 0;
 	}
 
-	status = SafeGetNtHeader(Base, &nt);
+	nt = GetNtHeaders(Base);
+	if (nt == NULL)
+	{
+		return NULL;
+	}
+
+	export_dir = GetExportDirectory(Base, nt);
+	MMU_Free(nt);
+
+	if (export_dir == NULL)
+	{
+		return 0;
+	}
+
+	export_func_ord = MMU_Alloc(export_dir->NumberOfFunctions * sizeof(USHORT));
+	export_func_va = MMU_Alloc(export_dir->NumberOfFunctions * sizeof(ULONG));
+	if (export_func_ord == NULL || export_func_va == NULL)
+	{
+		MMU_Free(export_func_ord);
+		MMU_Free(export_func_va);
+		return 0;
+	}
+
+	status = SafeCopy(export_func_ord, (CONST PVOID)(Base + export_dir->AddressOfNameOrdinals), export_dir->NumberOfFunctions * sizeof(USHORT));
 	if (!NT_SUCCESS(status))
 	{
+		MMU_Free(export_func_ord);
+		MMU_Free(export_func_va);
 		return 0;
 	}
 
-	export_va = nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
-	if (export_va == 0)
+	status = SafeCopy(export_func_va, (CONST PVOID)(Base + export_dir->AddressOfFunctions), export_dir->NumberOfFunctions * sizeof(ULONG));
+	if (!NT_SUCCESS(status))
 	{
+		MMU_Free(export_func_ord);
+		MMU_Free(export_func_va);
 		return 0;
 	}
 
-	export_dir = (PIMAGE_EXPORT_DIRECTORY)(Base + export_va);
-	export_func_ord = (PUSHORT)(Base + export_dir->AddressOfNameOrdinals);
-	export_func_va = (PULONG)(Base + export_dir->AddressOfFunctions);
-	export_names_va = (ULONG*)(Base + export_dir->AddressOfNames);
+	name_length = strlen(Name);
+	export_name = MMU_Alloc(name_length + 1);
 
 	for (ULONG i = 0; i < export_dir->NumberOfNames; ++i)
 	{
-		export_name = (CHAR*)(Base + export_names_va[i]);
-		if (!strcmp(export_name, Name))
+		status = SafeCopy(&export_name_va, (CONST PVOID)(Base + export_dir->AddressOfNames + i * sizeof(ULONG)), sizeof(ULONG));
+		if (!NT_SUCCESS(status))
 		{
-			return Base + export_func_va[export_func_ord[i]];
+			continue;
 		}
+
+		status = SafeCopy(export_name, (CONST PVOID)(Base + export_name_va), name_length);
+		if (!NT_SUCCESS(status) || strncmp(export_name, Name, name_length) != 0)
+		{
+			continue;
+		}
+
+		MMU_Free(export_dir);
+		MMU_Free(export_name);
+		MMU_Free(export_func_ord);
+		MMU_Free(export_func_va);
+		return Base + export_func_va[export_func_ord[i]];
 	}
 
+	MMU_Free(export_dir);
+	MMU_Free(export_name);
+	MMU_Free(export_func_ord);
+	MMU_Free(export_func_va);
 	return 0;
 }

@@ -11,15 +11,10 @@ BOOLEAN IsThreadValid(_In_ PETHREAD Thread)
 	PAGED_CODE();
 
 	NTSTATUS status = STATUS_SUCCESS;
-	CONTEXT context = { 0 };
 	RTL_MODULE_EXTENDED_INFO system_module = { 0 };
 
 
-	context.ContextFlags = CONTEXT_ALL;
-	PsGetContextThread(Thread, &context, KernelMode);
-
-	DebugMessage("found rip: %p", context.Rip);
-	status = FindSystemModuleByAddress(context.Rip, &system_module);
+	status = FindSystemModuleByAddress(32, &system_module);
 	return NT_SUCCESS(status);
 }
 
@@ -45,5 +40,6 @@ VOID DetectHiddenThreads(VOID)
 
 	SkipThread:
 		ObfDereferenceObject(thread);
+		break;
 	}
 }

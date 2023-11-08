@@ -73,6 +73,9 @@ OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB
 	{
 		//DebugMessage("(%x) %i %i %i", status, protection.Signer, protection.Audit, protection.Type);
 
+		//PFILE_OBJECT file_object = *(PFILE_OBJECT*)((ULONG64)parent_process + 0x5a0);
+		//DebugMessage("%S", file_object->FileName.Buffer);
+
 		// WHITELISTED PROCESSES MUST BE VALIDATED FURTHER
 		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
 		{
