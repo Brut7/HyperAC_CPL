@@ -9,7 +9,6 @@ volatile LONG64 g_FreeCount = 0;
 volatile LONG g_UnloadThreads = FALSE;
 volatile LONG g_ThreadCount = 0;
 HANDLE g_MainThread = NULL;
-HANDLE g_ScannerThread = NULL;
 
 REPORT_NODE g_ReportHead = { NULL };
 SPINLOCK g_ReportLock = { 0 };
@@ -30,11 +29,6 @@ SYSTEM_MODULES g_SystemModules = { 0 };
 VOID FreeConfig(VOID)
 {
     PAGED_CODE();
-
-    if (g_ScannerThread != NULL)
-    {
-        ZwClose(g_ScannerThread);
-    }
 
     if (g_MainThread != NULL)
     {

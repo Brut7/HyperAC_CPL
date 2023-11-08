@@ -82,13 +82,15 @@
     <ClCompile Include="hv.c" />
     <ClCompile Include="hwid.c" />
     <ClCompile Include="ioctl.c" />
-    <ClCompile Include="threads.c" />
+    <ClCompile Include="pe.c" />
+    <ClCompile Include="main.c" />
     <ClCompile Include="memory.c" />
     <ClCompile Include="mmu.c" />
     <ClCompile Include="pt.c" />
     <ClCompile Include="report.c" />
     <ClCompile Include="sha256.c" />
     <ClCompile Include="spinlock.c" />
+    <ClCompile Include="threads.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="callbacks.h" />
@@ -102,13 +104,15 @@
     <ClInclude Include="hwid.h" />
     <ClInclude Include="ia32.h" />
     <ClInclude Include="ioctl.h" />
-    <ClInclude Include="threads.h" />
+    <ClInclude Include="pe.h" />
+    <ClInclude Include="main.h" />
     <ClInclude Include="memory.h" />
     <ClInclude Include="mmu.h" />
     <ClInclude Include="pt.h" />
     <ClInclude Include="report.h" />
     <ClInclude Include="sha256.h" />
     <ClInclude Include="spinlock.h" />
+    <ClInclude Include="threads.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

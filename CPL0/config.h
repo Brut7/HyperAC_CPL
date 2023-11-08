@@ -21,10 +21,8 @@ extern volatile LONG64 g_FreeCount;
 extern volatile LONG g_UnloadThreads;
 extern volatile LONG g_ThreadCount;
 extern HANDLE g_MainThread;
-extern HANDLE g_ScannerThread;
 
 extern REPORT_NODE g_ReportHead;
-extern REPORT_NODE g_ShadowReportHead;
 extern SPINLOCK g_ReportLock;
 
 extern PDRIVER_OBJECT g_DriverObject;
@@ -36,9 +34,6 @@ extern BOOLEAN g_ProcessCallbackRegistered;
 
 extern PEPROCESS g_GameProcess;
 extern HANDLE g_GameProcessId;
-
-extern SPINLOCK g_SystemModulesLock;
-extern SYSTEM_MODULES g_SystemModules;
 
 VOID FreeConfig(VOID);
 

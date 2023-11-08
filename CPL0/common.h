@@ -260,6 +260,37 @@ typedef struct _SYSTEM_MODULES
     PRTL_MODULE_EXTENDED_INFO Modules;
 }SYSTEM_MODULES, * PSYSTEM_MODULES;
 
+typedef union _THREAD_MISC_FLAGS
+{
+    struct
+    {
+        ULONG AutoBoostActive : 1;                                        //0x74
+        ULONG ReadyTransition : 1;                                        //0x74
+        ULONG WaitNext : 1;                                               //0x74
+        ULONG SystemAffinityActive : 1;                                   //0x74
+        ULONG Alertable : 1;                                              //0x74
+        ULONG UserStackWalkActive : 1;                                    //0x74
+        ULONG ApcInterruptRequest : 1;                                    //0x74
+        ULONG QuantumEndMigrate : 1;                                      //0x74
+        ULONG UmsDirectedSwitchEnable : 1;                                //0x74
+        ULONG TimerActive : 1;                                            //0x74
+        ULONG SystemThread : 1;                                           //0x74
+        ULONG ProcessDetachActive : 1;                                    //0x74
+        ULONG CalloutActive : 1;                                          //0x74
+        ULONG ScbReadyQueue : 1;                                          //0x74
+        ULONG ApcQueueable : 1;                                           //0x74
+        ULONG ReservedStackInUse : 1;                                     //0x74
+        ULONG UmsPerformingSyscall : 1;                                   //0x74
+        ULONG TimerSuspended : 1;                                         //0x74
+        ULONG SuspendedWaitMode : 1;                                      //0x74
+        ULONG SuspendSchedulerApcWait : 1;                                //0x74
+        ULONG CetUserShadowStack : 1;                                     //0x74
+        ULONG BypassProcessFreeze : 1;                                    //0x74
+        ULONG Reserved : 10;                                              //0x74
+    };
+    LONG MiscFlags;                                                     //0x74
+}THREAD_MISC_FLAGS, *PTHREAD_MISC_FLAGS;
+
 #define PROCESS_TERMINATE                  (0x0001)  
 #define PROCESS_CREATE_THREAD              (0x0002)  
 #define PROCESS_SET_SESSIONID              (0x0004)  
@@ -319,6 +350,14 @@ NTSTATUS ZwQuerySystemInformation(
     _Out_opt_ PULONG                   ReturnLength
 );
 
+NTSTATUS ZwQueryInformationThread(
+    _In_      HANDLE          ThreadHandle,
+    _In_      THREADINFOCLASS ThreadInformationClass,
+    _In_      PVOID           ThreadInformation,
+    _In_      ULONG           ThreadInformationLength,
+    _Out_opt_ PULONG          ReturnLength
+);
+
 NTSTATUS NTAPI MmCopyVirtualMemory
 (
     PEPROCESS SourceProcess,
@@ -338,6 +377,9 @@ NTSTATUS RtlQueryModuleInformation(
     PVOID InformationBuffer
 );
 
+NTSTATUS PsGetContextThread(_In_ PETHREAD Thread, _Out_ PCONTEXT pContext, _In_ KPROCESSOR_MODE PreviousMode);
+
+
 typedef struct _SCAN_HASH
 {
     UCHAR SHA256[32];
@@ -345,6 +387,7 @@ typedef struct _SCAN_HASH
 
 typedef struct _SCAN_CONTEXT
 {
+    MODE Mode;
     USHORT HashCount;
     PSCAN_HASH Hashes;
 }SCAN_CONTEXT, * PSCAN_CONTEXT;

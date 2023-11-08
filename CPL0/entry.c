@@ -5,7 +5,7 @@
 
 #include "config.h"
 #include "ioctl.h"
-#include "threads.h"
+#include "main.h"
 #include "common.h"
 #include "flow.h"
 #include "callbacks.h"
@@ -25,7 +25,7 @@ static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
 
     while (InterlockedExchange8(&g_ThreadCount, g_ThreadCount) > 0)
     {
-        Sleep(1);
+        _mm_pause();
     }
    
     DebugMessage("Freed: %u / Allocated: %u", g_FreeCount, g_AllocCount);
@@ -67,14 +67,6 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     DriverObject->DriverUnload = DriverUnload;
 
     status = PsCreateSystemThread(&g_MainThread, THREAD_ALL_ACCESS, NULL, NULL, NULL, MainThread, NULL);
-    if (!NT_SUCCESS(status))
-    {
-        DebugMessage("PsCreateSystemThread failed: 0x%08X\n", status);
-        DriverUnload(DriverObject);
-        return status;
-    }
-
-    status = PsCreateSystemThread(&g_ScannerThread, THREAD_ALL_ACCESS, NULL, NULL, NULL, ScannerThread, NULL);
     if (!NT_SUCCESS(status))
     {
         DebugMessage("PsCreateSystemThread failed: 0x%08X\n", status);

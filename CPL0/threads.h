@@ -1,12 +1,10 @@
-#ifndef H_MAIN
-#define H_MAIN
+#ifndef H_THREADS
+#define H_THREADS
 
 #include <ntifs.h>
 
-VOID ScannerThread(_In_opt_ PVOID Context);
-VOID MainThread(_In_opt_ PVOID Context);
+BOOLEAN IsThreadValid(_In_ PETHREAD Thread);
 
-#pragma alloc_text(PAGE, ScannerThread)
-#pragma alloc_text(PAGE, MainThread)
+VOID DetectHiddenThreads(VOID);
 
-#endif
+#endif // H_THREADS

@@ -1,69 +1,49 @@
 #include "threads.h"
-#include "config.h"
-#include "common.h"
-#include "hv.h"
-#include "flow.h"
-#include "memory.h"
-#include "sha256.h"
-#include "mmu.h"
-#include "pt.h"
-#include "callbacks.h"
+#include "report.h"
 #include "drivers.h"
+#include "common.h"
+#include "config.h"
+#include "memory.h"
 
 
-VOID ScannerThread(_In_opt_ PVOID Context)
+BOOLEAN IsThreadValid(_In_ PETHREAD Thread)
 {
-	UNREFERENCED_PARAMETER(Context);
 	PAGED_CODE();
 
-	CR3 cr3 = { 0 };
 	NTSTATUS status = STATUS_SUCCESS;
+	CONTEXT context = { 0 };
+	RTL_MODULE_EXTENDED_INFO system_module = { 0 };
 
-	InterlockedIncrement(&g_ThreadCount);
-	
-	while (InterlockedExchange(&g_UnloadThreads, g_UnloadThreads) == FALSE)
-	{
-		ValidateReportList();
 
-		Sleep(800);
-	}
+	context.ContextFlags = CONTEXT_ALL;
+	PsGetContextThread(Thread, &context, KernelMode);
 
-ExitThread:
-	InterlockedDecrement(&g_ThreadCount);
-	PsTerminateSystemThread(STATUS_SUCCESS);
+	DebugMessage("found rip: %p", context.Rip);
+	status = FindSystemModuleByAddress(context.Rip, &system_module);
+	return NT_SUCCESS(status);
 }
 
-VOID MainThread(_In_opt_ PVOID Context)
+VOID DetectHiddenThreads(VOID)
 {
-	UNREFERENCED_PARAMETER(Context);
 	PAGED_CODE();
 
+	PETHREAD thread = NULL;
 	NTSTATUS status = STATUS_SUCCESS;
 
-
-
-	InterlockedIncrement(&g_ThreadCount);
-
-	PeformVmExitCheck();
-
-	while (InterlockedExchange(&g_UnloadThreads, g_UnloadThreads) == FALSE)
+	for (USHORT i = 0; i < 0xFFFF; ++i)
 	{
-		ValidateReportList();
-
-		SpinlockAcquire(&g_SystemModulesLock);
-
-		if (g_SystemModules.Modules != NULL)
+		status = PsLookupThreadByThreadId((HANDLE)i, &thread);
+		if (!NT_SUCCESS(status) || !IoIsSystemThread(thread))
 		{
-			MMU_Free(g_SystemModules.Modules);
+			continue;
 		}
 
-		status = PopulateSystemModules(&g_SystemModules);
-		SpinlockRelease(&g_SystemModulesLock);
+		if (!IsThreadValid(thread))
+		{
+			DebugMessage("found system thread (%d)", i);
+		}
 
-		Sleep(100);
+	SkipThread:
+		ObfDereferenceObject(thread);
 	}
-
-ExitThread:
-	InterlockedDecrement(&g_ThreadCount);
-	PsTerminateSystemThread(STATUS_SUCCESS);
 }
