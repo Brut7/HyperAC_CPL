@@ -46,16 +46,12 @@ VOID MainThread(_In_opt_ PVOID Context)
 	//ExInitializeWorkItem(worker, WorkItemRoutine, worker);
 	//ExQueueWorkItem(worker, BackgroundWorkQueue);
 	//
-
 	RTL_MODULE_EXTENDED_INFO ci;
+
 	if (NT_SUCCESS(FindSystemModuleByName("CI.dll", &ci)))
 	{
-		DebugMessage("black men dont cheat %p (%s)", ci.ImageBase, ci.FullPathName);
-
-		ULONG64 CiCheckSignedFile = FindExport(ci.ImageBase, "CiCheckSignedFile");
-		DebugMessage("if ur gay, you got no cred: %p", CiCheckSignedFile);
+		g_CiCheckSignedFile = FindExport(ci.ImageBase, "CiCheckSignedFile");
 	}
-
 
 	while (InterlockedExchange(&g_UnloadThreads, g_UnloadThreads) == FALSE)
 	{

@@ -2,6 +2,7 @@
 #define H_COMMON
 
 #include <ntifs.h>
+#include <minwindef.h>
 
 #define STATIC static
 
@@ -392,4 +393,72 @@ typedef struct _SCAN_CONTEXT
     PSCAN_HASH Hashes;
 }SCAN_CONTEXT, * PSCAN_CONTEXT;
 
+typedef struct _WIN_CERTIFICATE
+{
+    DWORD dwLength;
+    WORD  wRevision;
+    WORD  wCertificateType;
+    BYTE  bCertificate[ANYSIZE_ARRAY];
+} WIN_CERTIFICATE, * LPWIN_CERTIFICATE;
+
+typedef struct _Asn1BlobPtr
+{
+    LONG size;
+    PVOID ptrToData;
+} Asn1BlobPtr, * pAsn1BlobPtr;
+
+typedef struct _CertificatePartyName
+{
+    PVOID pointerToName;
+    SHORT nameLen;
+    SHORT unknown;
+} CertificatePartyName, * pCertificatePartyName;
+
+typedef struct _CertChainMember
+{
+    LONG digestIdetifier;
+    LONG digestSize;
+    BYTE digestBuffer[64];
+    CertificatePartyName subjectName;
+    CertificatePartyName issuerName;
+    Asn1BlobPtr certificate;
+} CertChainMember, * pCertChainMember;
+
+typedef struct _CertChainInfoHeader
+{
+    LONG bufferSize;
+    pAsn1BlobPtr ptrToPublicKeys;
+    LONG numberOfPublicKeys;
+    pAsn1BlobPtr ptrToEkus;
+    LONG numberOfEkus;
+    pCertChainMember ptrToCertChainMembers;
+    LONG numberOfCertChainMembers;
+    LONG unknown;
+    Asn1BlobPtr variousAuthenticodeAttributes;
+} CertChainInfoHeader, * pCertChainInfoHeader;
+
+typedef struct _PolicyInfo
+{
+    LONG structSize;
+    NTSTATUS verificationStatus;
+    LONG flags;
+    pCertChainInfoHeader certChainInfo;
+    FILETIME revocationTime;
+    FILETIME notBeforeTime;
+    FILETIME notAfterTime;
+} PolicyInfo, * pPolicyInfo;
+
+PVOID RtlImageDirectoryEntryToData(PVOID BaseAddress, BOOLEAN MappedAsImage, USHORT Directory, PULONG Size);
+typedef NTSTATUS(_stdcall* PFN_CiCheckSignedFile)(
+    const PVOID digestBuffer,
+    LONG digestSize,
+    LONG digestIdentifier,
+    const WIN_CERTIFICATE* winCert,
+    LONG sizeOfSecurityDirectory,
+    PolicyInfo* policyInfoForSigner,
+    LARGE_INTEGER* signingTime,
+    PolicyInfo* policyInfoForTimestampingAuthority
+    );
+PVOID NTAPI PsGetProcessSectionBaseAddress(PEPROCESS Process);
+PIMAGE_NT_HEADERS NTAPI RtlImageNtHeader( IN PVOID                ModuleAddress);
 #endif // H_COMMON

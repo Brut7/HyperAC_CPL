@@ -35,6 +35,8 @@ extern BOOLEAN g_ProcessCallbackRegistered;
 extern PEPROCESS g_GameProcess;
 extern HANDLE g_GameProcessId;
 
+extern PFN_CiCheckSignedFile g_CiCheckSignedFile;
+
 VOID FreeConfig(VOID);
 
 #pragma alloc_text(PAGE, FreeConfig)

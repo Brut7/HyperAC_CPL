@@ -5,7 +5,8 @@
 #include "mmu.h"
 #include "memory.h"
 #include <ioc.h>
-
+#include <ntimage.h>
+#include "pe.h"
 VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT Context)
 {
 	PAGED_CODE();
@@ -47,6 +48,248 @@ VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT
 		}
 	}
 }
+//shit
+BOOL inRange(const BYTE* rangeStartAddr, const BYTE* rangeEndAddr, const BYTE* addrToCheck)
+{
+	if (addrToCheck > rangeEndAddr || addrToCheck < rangeStartAddr)
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL AuthenticateApplication(PCUNICODE_STRING ImageFileName, PVOID DigestBuffer, LONG SHAtype)
+{
+		
+	IO_STATUS_BLOCK IoBlock = { 0 };
+	OBJECT_ATTRIBUTES ObjAttr = { 0 }, ObjAttr2 = { 0 };
+	HANDLE FileHandle = NULL, SectionHandle = NULL;
+	PVOID SectionObject = NULL, BaseAddress = NULL;
+	SIZE_T BaseSize = NULL;
+
+	InitializeObjectAttributes(&ObjAttr, (PUNICODE_STRING)(ImageFileName), OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+
+	NTSTATUS Status = ZwOpenFile(&FileHandle, SYNCHRONIZE | FILE_READ_DATA, &ObjAttr, &IoBlock, FILE_SHARE_READ, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+
+	if (!NT_SUCCESS(Status) || !NT_SUCCESS(IoBlock.Status) || !FileHandle)
+	{
+		DebugMessage("Failed to open file: 0x%llX | 0x%llX\n", Status, IoBlock.Status);
+		return FALSE;
+	}
+
+	InitializeObjectAttributes(&ObjAttr2, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+	Status = ZwCreateSection(&SectionHandle, SECTION_MAP_READ, &ObjAttr2, NULL, PAGE_READONLY, SEC_COMMIT, FileHandle);
+	ZwClose(FileHandle);
+
+	if (!NT_SUCCESS(Status) || !SectionHandle)
+	{
+		DebugMessage("Failed to create section: 0x%llX\n", Status);
+		return FALSE;
+	}
+
+	Status = ObReferenceObjectByHandle(SectionHandle, SECTION_MAP_READ, NULL, KernelMode, &SectionObject, NULL);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DebugMessage("Failed to reference object: 0x%llX\n", Status);
+		return FALSE;
+	}
+
+	ZwClose(SectionHandle);
+
+	Status = MmMapViewInSystemSpace(SectionObject, &BaseAddress, &BaseSize);
+	ObfDereferenceObject(SectionObject);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DebugMessage("Failed to map section: 0x%llX\n", Status);
+		return FALSE;
+	}
+
+	ULONG SecurityDirectoryEntrySize = NULL;
+	PVOID SecurityDirectoryEntry = RtlImageDirectoryEntryToData(BaseAddress, TRUE, 4, &SecurityDirectoryEntrySize);
+
+	if (!SecurityDirectoryEntry)
+	{
+		DebugMessage("Failed to get security directory!\n");
+		MmUnmapViewInSystemSpace(BaseAddress);
+		return FALSE;
+	}
+
+	const BYTE* EndOfFileAddress = (BYTE*)(BaseAddress)+BaseSize;
+	const BYTE* EndOfSecurityDirectory = (BYTE*)(SecurityDirectoryEntry)+SecurityDirectoryEntrySize;
+
+	if (EndOfSecurityDirectory > EndOfFileAddress || SecurityDirectoryEntry < BaseAddress)
+	{
+		DebugMessage("Security Directory is not contained in the file view!\n");
+		MmUnmapViewInSystemSpace(BaseAddress);
+		return FALSE;
+	}
+
+	LPWIN_CERTIFICATE WinCert = (LPWIN_CERTIFICATE)(SecurityDirectoryEntry);
+
+	PolicyInfo SignerPolicyInfo, TAPolicyInfo;
+	LARGE_INTEGER SigningTime = { 0 };
+	const LONG DigestSize = SHAtype == 1 ? 20 : 32; // SHA1 / SHA256 size
+	const LONG DigestIdentifier = SHAtype == 1 ? 0x8004 : 0x800C; // SHA1 / SHA256 identifier
+
+	Status = g_CiCheckSignedFile(DigestBuffer, DigestSize, DigestIdentifier, WinCert, SecurityDirectoryEntrySize, &SignerPolicyInfo, &SigningTime, &TAPolicyInfo);
+
+	if (NT_SUCCESS(Status))
+	{
+		DebugMessage("Signed file found!\n");
+		MmUnmapViewInSystemSpace(BaseAddress);
+
+		/*if (DebugEnabled)
+		{*/
+		const pCertChainInfoHeader ChainInfoHeader = SignerPolicyInfo.certChainInfo;
+		const BYTE* StartOfCertChainInfo = (BYTE*)ChainInfoHeader;
+		const BYTE* EndOfCertChainInfo = (BYTE*)SignerPolicyInfo.certChainInfo + ChainInfoHeader->bufferSize;
+
+		if (!inRange(StartOfCertChainInfo, EndOfCertChainInfo, (BYTE*)ChainInfoHeader->ptrToCertChainMembers))
+			return TRUE;
+
+		if (!inRange(StartOfCertChainInfo, EndOfCertChainInfo, (BYTE*)ChainInfoHeader->ptrToCertChainMembers + sizeof(CertChainMember)))
+			return TRUE;
+
+		pCertChainMember SignerChainMember = ChainInfoHeader->ptrToCertChainMembers;
+
+		DebugMessage("Subject: %.*s\nIssuer: %.*s\n", SignerChainMember->subjectName.nameLen, (char*)(SignerChainMember->subjectName.pointerToName),
+			SignerChainMember->issuerName.nameLen, (char*)(SignerChainMember->issuerName.pointerToName));
+		//}
+
+		return TRUE;
+	}
+	else
+		DebugMessage("Failed to get signed file0x%llX\n", Status);
+
+	MmUnmapViewInSystemSpace(BaseAddress);
+	return FALSE;
+}
+NTSTATUS GetProcessImagePath(OUT PUNICODE_STRING ProcessImagePath)
+{
+	NTSTATUS status = STATUS_UNSUCCESSFUL;
+	HANDLE processHandle = NULL;
+
+	// Get a handle to the current process.
+	status = ObOpenObjectByPointer(PsGetCurrentProcess(),
+		OBJ_KERNEL_HANDLE,
+		NULL,
+		GENERIC_READ,
+		*PsProcessType,
+		KernelMode,
+		&processHandle);
+
+	if (NT_SUCCESS(status))
+	{
+		// Query the process image file name.
+		ULONG returnedLength;
+		status = ZwQueryInformationProcess(processHandle,
+			ProcessImageFileName,
+			ProcessImagePath,
+			ProcessImagePath->MaximumLength,
+			&returnedLength);
+
+		// Close the handle to the process.
+		ZwClose(processHandle);
+	}
+
+	return status;
+}
+#include <bcrypt.h>
+
+#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+
+BOOLEAN CalculateAuthenticodeHash(
+	_In_ PVOID imageBase,
+	_In_ ULONG checksumOffset,
+	_In_ ULONG securityDirectoryOffset,
+	_In_ ULONG securityDirectorySize,
+	_Out_ PUCHAR hashBuffer,
+	_In_ ULONG hashBufferSize)
+{
+	NTSTATUS status = STATUS_UNSUCCESSFUL;
+	BCRYPT_ALG_HANDLE hAlgorithm = NULL;
+	BCRYPT_HASH_HANDLE hHash = NULL;
+	ULONG resultSize = 0;
+	PUCHAR hashObject = NULL;
+	ULONG hashObjectSize = 0;
+
+	// Open an algorithm handle.
+	status = BCryptOpenAlgorithmProvider(&hAlgorithm, BCRYPT_SHA256_ALGORITHM, NULL, 0);
+	if (!NT_SUCCESS(status)) {
+		return FALSE;
+	}
+
+	// Get the size of the buffer to hold the hash object.
+	status = BCryptGetProperty(hAlgorithm, BCRYPT_OBJECT_LENGTH, (PUCHAR)&hashObjectSize, sizeof(ULONG), &resultSize, 0);
+	if (!NT_SUCCESS(status)) {
+		BCryptCloseAlgorithmProvider(hAlgorithm, 0);
+		return FALSE;
+	}
+
+	// Allocate the hash object on the heap.
+	hashObject = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, hashObjectSize, 'hash');
+	if (hashObject == NULL) {
+		BCryptCloseAlgorithmProvider(hAlgorithm, 0);
+		return FALSE;
+	}
+
+	// Create a hash.
+	status = BCryptCreateHash(hAlgorithm, &hHash, hashObject, hashObjectSize, NULL, 0, 0);
+	if (!NT_SUCCESS(status)) {
+		ExFreePoolWithTag(hashObject, 'hash');
+		BCryptCloseAlgorithmProvider(hAlgorithm, 0);
+		return FALSE;
+	}
+	DebugMessage("imagebase byte value: %x", *(PUCHAR)imageBase);
+	// Hash the image up to the checksum.
+	status = BCryptHashData(hHash, (PUCHAR)imageBase, checksumOffset, 0);
+	if (!NT_SUCCESS(status)) {
+		goto Cleanup;
+	}
+	BCryptFinishHash(hHash, hashBuffer, hashBufferSize, 0);
+	return NT_SUCCESS(status);
+
+	// Skip checksum and security directory, continue hashing after them.
+	ULONG startOfHash = securityDirectoryOffset + securityDirectorySize;
+	ULONG sizeToHash = checksumOffset + securityDirectorySize - startOfHash;
+	status = BCryptHashData(hHash, (PUCHAR)imageBase + startOfHash, sizeToHash, 0);
+	if (!NT_SUCCESS(status)) {
+		goto Cleanup;
+	}
+
+	// Finalize the hash.
+	status = BCryptFinishHash(hHash, hashBuffer, hashBufferSize, 0);
+	if (!NT_SUCCESS(status)) {
+		goto Cleanup;
+	}
+
+Cleanup:
+	if (hHash) {
+		BCryptDestroyHash(hHash);
+	}
+	if (hashObject) {
+		ExFreePoolWithTag(hashObject, 'hash');
+	}
+	BCryptCloseAlgorithmProvider(hAlgorithm, 0);
+
+	return NT_SUCCESS(status);
+}
+
+VOID PrintHash(const PUCHAR digestBuffer, SIZE_T digestSize) {
+	CHAR hexOutput[65] = { 0 }; // 32 bytes * 2 characters/byte + 1 for null-terminator
+	const CHAR hexDigits[] = "0123456789ABCDEF";
+
+	for (SIZE_T i = 0, j = 0; i < digestSize; ++i) {
+		hexOutput[j++] = hexDigits[(digestBuffer[i] >> 4) & 0x0F];
+		hexOutput[j++] = hexDigits[digestBuffer[i] & 0x0F];
+	}
+
+	// Print the hex string using DbgPrintEx
+	DbgPrintEx(0, 0, "%s\n", hexOutput);
+}
 
 
 OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB_PRE_OPERATION_INFORMATION OpInfo)
@@ -68,11 +311,46 @@ OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB
 	parent_process = IoGetCurrentProcess();
 	parent_process_id = PsGetProcessId(parent_process);
 	image_name = PsGetProcessImageFileName(parent_process);
-
+	
 	if (g_GameProcess == process && g_GameProcessId == process_id && parent_process != g_GameProcess)
 	{
 		//DebugMessage("(%x) %i %i %i", status, protection.Signer, protection.Audit, protection.Type);
 
+		if (!strcmp(image_name, "explorer.exe"))
+		{
+
+			UNICODE_STRING ImageFileName;
+			//GetProcessImagePath(&ImageFileName);
+			DebugMessage("%wZ", );
+			UNICODE_STRING UnicodeImageFileName;
+			ANSI_STRING AnsiImageFileName;
+			// First convert the char* ImageFileName to an ANSI_STRING
+			RtlInitAnsiString(&AnsiImageFileName, "\\??\\C:\\Windows\\explorer.exe");
+			// Then convert the ANSI_STRING to a UNICODE_STRING
+			RtlAnsiStringToUnicodeString(&UnicodeImageFileName, &AnsiImageFileName, TRUE);
+			/*char DigestBuffer[] = {
+	0x95, 0xed, 0x57, 0x7f, 0xa7, 0x50, 0x31, 0xd2,
+	0x1c, 0x56, 0x3a, 0x96, 0x89, 0x6a, 0xaf, 0xda,
+	0x00, 0x23, 0x71, 0x98, 0xea, 0x95, 0x27, 0xc1,
+	0x53, 0x13, 0x60, 0x69, 0xce, 0x17, 0x67, 0xef
+			};*/
+			PVOID base_address = PsGetProcessSectionBaseAddress(IoGetCurrentProcess());
+			PIMAGE_NT_HEADERS nt_header = RtlImageNtHeader(base_address);
+			//SafeGetNtHeader(base_address, &nt_header);
+
+			ULONG64 security_offset = nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY].VirtualAddress;
+			//nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY].Size;
+			ULONG64 checksumaddress = &nt_header->OptionalHeader.CheckSum;
+
+			DebugMessage("value: %x ", *(PUCHAR)((ULONG64)base_address + 2));
+			DebugMessage("allok\n");
+			char DigestBuffer[32];
+			CalculateAuthenticodeHash(base_address, checksumaddress - (ULONG64)base_address, security_offset - (ULONG64)base_address, 0, DigestBuffer, 32);
+			DebugMessage("checksumoffset: %x", checksumaddress - (ULONG64)base_address);
+			PrintHash(DigestBuffer, 32);
+			BOOL result = AuthenticateApplication(&UnicodeImageFileName, DigestBuffer, 2);
+			DebugMessage("auth result: %i\n", result);
+		}
 		// WHITELISTED PROCESSES MUST BE VALIDATED FURTHER
 		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
 		{

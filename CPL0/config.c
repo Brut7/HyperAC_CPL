@@ -23,8 +23,7 @@ BOOLEAN g_ProcessCallbackRegistered = FALSE;
 PEPROCESS g_GameProcess = NULL;
 HANDLE g_GameProcessId = NULL;
 
-SPINLOCK g_SystemModulesLock = { 0 };
-SYSTEM_MODULES g_SystemModules = { 0 };
+PFN_CiCheckSignedFile g_CiCheckSignedFile = NULL;
 
 VOID FreeConfig(VOID)
 {
@@ -38,12 +37,6 @@ VOID FreeConfig(VOID)
     if (g_GameProcess != NULL)
     {
         ObfDereferenceObject(g_GameProcess);
-    }
-
-    if (g_SystemModules.Modules != NULL)
-    {
-        g_SystemModules.Count = 0;
-        MMU_Free(g_SystemModules.Modules);
     }
 
     FreeReportList();
