@@ -1,6 +1,6 @@
 #include "hwid.h"
 #include "common.h"
-#include "sha256.h"
+#include "hash.h"
 #include "mmu.h"
 #include "config.h"
 
@@ -10,7 +10,6 @@ NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[32]) {
 	NTSTATUS status = STATUS_SUCCESS;
 	ULONG req_size = 0;
 	PSYSTEM_BOOT_ENVIRONMENT_INFORMATION boot_info = NULL;
-	SHA256_CTX sha256_ctx = { 0 };
 
 	status = ZwQuerySystemInformation(SystemBootEnvironmentInformation, NULL, 0, &req_size);
 	if (status != STATUS_INFO_LENGTH_MISMATCH) {
@@ -31,9 +30,10 @@ NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[32]) {
 		return status;
 	}
 
-	sha256_init(&sha256_ctx);
-	sha256_update(&sha256_ctx, (UCHAR*)&boot_info->BootIdentifier, sizeof(GUID));
-	sha256_final(&sha256_ctx, Hash);
+	status = SHA1_HashBuffer((UCHAR*)&boot_info->BootIdentifier, sizeof(GUID), Hash);
+	if (!NT_SUCCESS(status)) {
+		DebugMessage("SHA1_HashBuffer failed: 0x%08X\n", status);
+	}
 
 	MMU_Free(boot_info);
 	return status;

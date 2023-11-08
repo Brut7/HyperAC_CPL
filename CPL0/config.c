@@ -25,6 +25,12 @@ HANDLE g_GameProcessId = NULL;
 
 PFN_CiCheckSignedFile g_CiCheckSignedFile = NULL;
 
+BCRYPT_ALG_HANDLE g_hAlgorithm_MD5 = NULL;
+BCRYPT_HASH_HANDLE g_hHash_MD5 = NULL;
+
+BCRYPT_ALG_HANDLE g_hAlgorithm_SHA1 = NULL;
+BCRYPT_HASH_HANDLE g_hHash_SHA1 = NULL;
+
 VOID FreeConfig(VOID)
 {
     PAGED_CODE();
@@ -37,6 +43,26 @@ VOID FreeConfig(VOID)
     if (g_GameProcess != NULL)
     {
         ObfDereferenceObject(g_GameProcess);
+    }
+
+    if (g_hHash_MD5 != NULL)
+    {
+        BCryptDestroyHash(g_hHash_MD5);
+    }
+
+    if (g_hAlgorithm_MD5 != NULL)
+    {
+        BCryptCloseAlgorithmProvider(g_hAlgorithm_MD5, 0);
+    }
+
+    if (g_hAlgorithm_SHA1 != NULL)
+    {
+        BCryptDestroyHash(g_hAlgorithm_SHA1);
+    }
+
+    if (g_hHash_SHA1 != NULL)
+    {
+        BCryptCloseAlgorithmProvider(g_hHash_SHA1, 0);
     }
 
     FreeReportList();

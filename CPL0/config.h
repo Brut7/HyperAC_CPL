@@ -2,6 +2,7 @@
 #define H_CONFIG
 
 #include <ntifs.h>
+#include <bcrypt.h>
 #include "report.h"
 #include "spinlock.h"
 #include "common.h"
@@ -36,6 +37,12 @@ extern PEPROCESS g_GameProcess;
 extern HANDLE g_GameProcessId;
 
 extern PFN_CiCheckSignedFile g_CiCheckSignedFile;
+
+extern BCRYPT_ALG_HANDLE g_hAlgorithm_MD5;
+extern BCRYPT_HASH_HANDLE g_hHash_MD5;
+
+extern BCRYPT_ALG_HANDLE g_hAlgorithm_SHA1;
+extern BCRYPT_HASH_HANDLE g_hHash_SHA1 ;
 
 VOID FreeConfig(VOID);
 

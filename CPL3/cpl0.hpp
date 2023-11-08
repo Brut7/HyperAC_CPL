@@ -17,7 +17,7 @@ public:
 
     bool IsValid() const;
 
-    array<BYTE, 32> GetHWID(CPL0_GET_HWID_TYPE Type) const;
+    array<BYTE, SHA1_SIZE> GetHWID(CPL0_GET_HWID_TYPE Type) const;
     vector<unique_ptr<REPORT_NODE>> GetReports() const;
     SIZE_T GetReportsSize() const;
 

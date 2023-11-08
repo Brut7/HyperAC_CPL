@@ -19,7 +19,7 @@ bool cpl0_c::IsValid() const
     return m_handle && m_handle != INVALID_HANDLE_VALUE;
 }
 
-array<BYTE, 32> cpl0_c::GetHWID(CPL0_GET_HWID_TYPE Type) const
+array<BYTE, SHA1_SIZE> cpl0_c::GetHWID(CPL0_GET_HWID_TYPE Type) const
 {
     CPL0_GET_HWID_REQ req;
     req.Type = Type;
@@ -30,7 +30,7 @@ array<BYTE, 32> cpl0_c::GetHWID(CPL0_GET_HWID_TYPE Type) const
 		return {};
     }
 
-    array<BYTE, 32> hash;
+    array<BYTE, SHA1_SIZE> hash;
     memcpy(hash.data(), &res.Hash, hash.size());
     return hash;
 }

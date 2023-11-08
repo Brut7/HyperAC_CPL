@@ -383,7 +383,7 @@ NTSTATUS PsGetContextThread(_In_ PETHREAD Thread, _Out_ PCONTEXT pContext, _In_ 
 
 typedef struct _SCAN_HASH
 {
-    UCHAR SHA256[32];
+    UCHAR MD5[16];
 }SCAN_HASH, * PSCAN_HASH;
 
 typedef struct _SCAN_CONTEXT

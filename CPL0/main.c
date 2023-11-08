@@ -4,13 +4,13 @@
 #include "hv.h"
 #include "flow.h"
 #include "memory.h"
-#include "sha256.h"
 #include "mmu.h"
 #include "pt.h"
 #include "callbacks.h"
 #include "drivers.h"
 #include "threads.h"
 #include "pe.h"
+#include "hash.h"
 
 VOID ScannerWorker(PVOID Context)
 {
@@ -33,6 +33,7 @@ VOID ScannerWorker(PVOID Context)
 		active_threads = *(volatile ULONG*)((ULONG64)process + 0x5f0); // ActiveThreads
 		if (active_threads > 0)
 		{
+			DebugMessage("%s", PsGetProcessImageFileName(process));
 			KeAttachProcess(process);
 			cr3.AsUInt = __readcr3();
 			KeDetachProcess();
@@ -60,20 +61,25 @@ VOID MainThread(_In_opt_ PVOID Context)
 
 	InterlockedIncrement(&g_ThreadCount);
 
+	status = MD5_Init();
+	if (!NT_SUCCESS(status))
+	{
+		DebugMessage("failed to initialize MD5: 0x%08X\n", status);
+	}
+
+	status = SHA1_Init();
+	if (!NT_SUCCESS(status))
+	{
+		DebugMessage("failed to initialize SHA1: 0x%08X\n", status);
+	}
+
 	PeformVmExitCheck();
 
 	worker = (PWORK_QUEUE_ITEM)MMU_Alloc(sizeof(WORK_QUEUE_ITEM));
 	ExInitializeWorkItem(worker, ScannerWorker, worker);
 	ExQueueWorkItem(worker, BackgroundWorkQueue);
 
-	//worker = (PWORK_QUEUE_ITEM)MMU_Alloc(sizeof(WORK_QUEUE_ITEM));
-	//DebugMessage("worker: %p\n", worker);
-
-	//ExInitializeWorkItem(worker, WorkItemRoutine, worker);
-	//ExQueueWorkItem(worker, BackgroundWorkQueue);
-	//
 	RTL_MODULE_EXTENDED_INFO ci;
-
 	if (NT_SUCCESS(FindSystemModuleByName("CI.dll", &ci)))
 	{
 		g_CiCheckSignedFile = FindExport(ci.ImageBase, "CiCheckSignedFile");

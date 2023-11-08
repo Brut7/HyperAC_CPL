@@ -91,7 +91,7 @@
     <ClCompile Include="mmu.c" />
     <ClCompile Include="pt.c" />
     <ClCompile Include="report.c" />
-    <ClCompile Include="sha256.c" />
+    <ClCompile Include="hash.c" />
     <ClCompile Include="spinlock.c" />
     <ClCompile Include="threads.c" />
   </ItemGroup>
@@ -113,7 +113,7 @@
     <ClInclude Include="mmu.h" />
     <ClInclude Include="pt.h" />
     <ClInclude Include="report.h" />
-    <ClInclude Include="sha256.h" />
+    <ClInclude Include="hash.h" />
     <ClInclude Include="spinlock.h" />
     <ClInclude Include="threads.h" />
   </ItemGroup>
