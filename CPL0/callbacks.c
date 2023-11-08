@@ -48,6 +48,21 @@ VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT
 	}
 }
 
+
+typedef struct _PS_PROTECTION
+{
+	union
+	{
+		UCHAR Level;                                                        //0x0
+		struct
+		{
+			UCHAR Type : 3;                                                   //0x0
+			UCHAR Audit : 1;                                                  //0x0
+			UCHAR Signer : 4;                                                 //0x0
+		};
+	};
+}PS_PROTECTION, *PPS_PROTECTION;
+
 OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB_PRE_OPERATION_INFORMATION OpInfo)
 {
 	UNREFERENCED_PARAMETER(Context);
@@ -60,6 +75,7 @@ OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB
 	PCHAR image_name = NULL;
 	PREPORT_NODE report = NULL;
 	PREPORT_BLOCKED_PROCESS data = NULL;
+	NTSTATUS status = STATUS_SUCCESS;
 
 	process = (PEPROCESS)OpInfo->Object;
 	process_id = PsGetProcessId(process);
@@ -69,14 +85,24 @@ OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB
 
 	if (g_GameProcess == process && g_GameProcessId == process_id && parent_process != g_GameProcess)
 	{
-		
+		ULONG return_length = 0;
+		PS_PROTECTION protection = { 0 };
+
+		KeAttachProcess(parent_process);
+		status = ZwQueryInformationProcess(NtCurrentProcess(), ProcessProtectionInformation, &protection, sizeof(PS_PROTECTION), &return_length);
+		KeDetachProcess();
+
+		DebugMessage("(%x) (%s) %i %i %i", status, image_name, protection.Signer, protection.Audit, protection.Type);
+
+		//DebugMessage("(%x) %i %i %i", status, protection.Signer, protection.Audit, protection.Type);
+
 		// WHITELISTED PROCESSES MUST BE VALIDATED FURTHER
 		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
 		{
 			goto ExitCallback;
 		}
 
-		DebugMessage("Unknown process blocked (%s)\n", image_name);
+		//DebugMessage("Unknown process blocked (%s)\n", image_name);
 		OpInfo->Parameters->CreateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
 		OpInfo->Parameters->DuplicateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
 		
@@ -112,7 +138,7 @@ OB_PREOP_CALLBACK_STATUS OnThreadHandleCreation(_In_ PVOID Context, _Inout_ POB_
 	PCHAR image_name = NULL;
 	PREPORT_NODE report = NULL;
 	PREPORT_BLOCKED_THREAD data = NULL;
-
+	NTSTATUS status = STATUS_SUCCESS;
 
 	thread = (PKTHREAD)OpInfo->Object;
 	thread_id = PsGetThreadId(thread);
@@ -124,12 +150,21 @@ OB_PREOP_CALLBACK_STATUS OnThreadHandleCreation(_In_ PVOID Context, _Inout_ POB_
 
 	if (g_GameProcess == process && g_GameProcessId == process_id && parent_process != g_GameProcess)
 	{
+		ULONG return_length = 0;
+		PS_PROTECTION protection = { 0 };
+
+		KeAttachProcess(parent_process);
+		status = ZwQueryInformationProcess(NtCurrentProcess(), ProcessProtectionInformation, &protection, sizeof(PS_PROTECTION), &return_length);
+		KeDetachProcess();
+
+		DebugMessage("(%x) (%s) %i %i %i", status, image_name, protection.Signer, protection.Audit, protection.Type);
+
 		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
 		{
 			goto ExitCallback;
 		}
 
-		DebugMessage("Unknown process blocked (%s)\n", image_name);
+		//DebugMessage("Unknown process blocked (%s)\n", image_name);
 		OpInfo->Parameters->CreateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
 		OpInfo->Parameters->DuplicateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
 

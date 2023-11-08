@@ -304,6 +304,14 @@ typedef struct _SYSTEM_MODULES
 #define PAGE_ENCLAVE_SS_FIRST       (PAGE_ENCLAVE_MASK | 1) 
 #define PAGE_ENCLAVE_SS_REST        (PAGE_ENCLAVE_MASK | 2) 
 
+NTSTATUS ZwQueryInformationProcess(
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _Out_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength,
+    _Out_opt_ PULONG ReturnLength
+);
+
 NTSTATUS ZwQuerySystemInformation(
     _In_      SYSTEM_INFORMATION_CLASS SystemInformationClass,
     _Inout_   PVOID                    SystemInformation,
