@@ -10,7 +10,7 @@
 #include "callbacks.h"
 #include "drivers.h"
 #include "threads.h"
-
+#include "pe.h"
 
 VOID WorkItemRoutine(PVOID Context)
 {
@@ -51,7 +51,11 @@ VOID MainThread(_In_opt_ PVOID Context)
 	if (NT_SUCCESS(FindSystemModuleByName("CI.dll", &ci)))
 	{
 		DebugMessage("black men dont cheat %p (%s)", ci.ImageBase, ci.FullPathName);
+
+		ULONG64 CiCheckSignedFile = FindExport(ci.ImageBase, "CiCheckSignedFile");
+		DebugMessage("if ur gay, you got no cred: %p", CiCheckSignedFile);
 	}
+
 
 	while (InterlockedExchange(&g_UnloadThreads, g_UnloadThreads) == FALSE)
 	{
