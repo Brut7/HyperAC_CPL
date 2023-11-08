@@ -12,18 +12,42 @@
 #include "threads.h"
 #include "pe.h"
 
-VOID WorkItemRoutine(PVOID Context)
+VOID ScannerWorker(PVOID Context)
 {
-	CR3 cr3 = { .AsUInt = __readcr3() };
+	PAGED_CODE();
 
+	CR3 cr3 = { 0 };
+	PEPROCESS process = NULL;
+	PLIST_ENTRY head = NULL;
+	ULONG active_threads = 0;
 	SCAN_CONTEXT ctx = { 0 };
-	ctx.HashCount = 0;
-	ctx.Mode = KernelMode;
 
-	WalkPageTables(cr3, OnEachPage, &ctx);
-	DebugMessage("Context: %p\n", Context);
+	InterlockedIncrement(&g_ThreadCount);
 
 	MMU_Free(Context);
+
+	head = (PLIST_ENTRY)((ULONG64)PsInitialSystemProcess + 0x448); // ActiveProcessLinks
+	for (PLIST_ENTRY curr = head->Flink; curr != head; curr = curr->Flink)
+	{
+		process = (PEPROCESS)((ULONG64)curr - 0x448); // ActiveProcessLinks
+		active_threads = *(volatile ULONG*)((ULONG64)process + 0x5f0); // ActiveThreads
+		if (active_threads > 0)
+		{
+			KeAttachProcess(process);
+			cr3.AsUInt = __readcr3();
+			KeDetachProcess();
+
+			ctx.Mode = UserMode;
+			WalkPageTables(cr3, OnEachPage, &ctx);
+		}
+	}
+
+	cr3.AsUInt = __readcr3();
+	ctx.Mode = KernelMode;
+	WalkPageTables(cr3, OnEachPage, &ctx);
+
+	DebugMessage("finished scanning");
+	InterlockedDecrement(&g_ThreadCount);
 }
 
 VOID MainThread(_In_opt_ PVOID Context)
@@ -34,11 +58,13 @@ VOID MainThread(_In_opt_ PVOID Context)
 	NTSTATUS status = STATUS_SUCCESS;
 	PWORK_QUEUE_ITEM worker = NULL;
 
-
-
 	InterlockedIncrement(&g_ThreadCount);
 
 	PeformVmExitCheck();
+
+	worker = (PWORK_QUEUE_ITEM)MMU_Alloc(sizeof(WORK_QUEUE_ITEM));
+	ExInitializeWorkItem(worker, ScannerWorker, worker);
+	ExQueueWorkItem(worker, BackgroundWorkQueue);
 
 	//worker = (PWORK_QUEUE_ITEM)MMU_Alloc(sizeof(WORK_QUEUE_ITEM));
 	//DebugMessage("worker: %p\n", worker);
@@ -57,11 +83,9 @@ VOID MainThread(_In_opt_ PVOID Context)
 	{
 		ValidateReportList();
 
-		// Allocate the work item
+		// DetectHiddenThreads();
 
-		//DetectHiddenThreads();
-
-		Sleep(1000);
+		Sleep(100);
 	}
 
 ExitThread:

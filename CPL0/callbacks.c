@@ -4,6 +4,7 @@
 #include "report.h"
 #include "mmu.h"
 #include "memory.h"
+#include "pt.h"
 #include <ioc.h>
 #include <ntimage.h>
 #include "pe.h"
@@ -25,9 +26,9 @@ VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT
 		return;
 	}
 
-	sha256_init(&sha256_ctx);
-	sha256_update(&sha256_ctx, &page_data, sizeof(page_data));
-	sha256_final(&sha256_ctx, &hash);
+	//sha256_init(&sha256_ctx);
+	//sha256_update(&sha256_ctx, &page_data, sizeof(page_data));
+	//sha256_final(&sha256_ctx, &hash);
 
 	for (USHORT i = 0; i < Context->HashCount; ++i)
 	{

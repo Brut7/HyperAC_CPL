@@ -53,7 +53,7 @@ NTSTATUS FindSystemModuleByAddress(_In_ ULONG64 Address, _Out_ PRTL_MODULE_EXTEN
 
     if (Address == 0)
     {
-        return;
+        return STATUS_INVALID_PARAMETER;
     }
 
     status = PopulateSystemModules(&system_modules);
@@ -66,8 +66,8 @@ NTSTATUS FindSystemModuleByAddress(_In_ ULONG64 Address, _Out_ PRTL_MODULE_EXTEN
     {
         system_module = system_modules.Modules[i];
 
-        status = SafeGetNtHeader(system_module.ImageBase, &nt);
-        if (!NT_SUCCESS(status))
+        nt = GetNtHeaders(system_module.ImageBase);
+        if (nt == NULL)
         {
             continue;
         }
@@ -83,12 +83,15 @@ NTSTATUS FindSystemModuleByAddress(_In_ ULONG64 Address, _Out_ PRTL_MODULE_EXTEN
 
                 if (Address >= sec_start && Address < sec_end)
                 {
+                    MMU_Free(nt);
                     MMU_Free(system_modules.Modules);
                     *pSystemModule = system_module;
                     return STATUS_SUCCESS;
                 }
             }
         }
+
+        MMU_Free(nt);
     }
 
     MMU_Free(system_modules.Modules);
