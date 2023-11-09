@@ -4,7 +4,6 @@
     <ClCompile Include="entry.c" />
     <ClCompile Include="ioctl.c" />
     <ClCompile Include="handlers.c" />
-    <ClCompile Include="sha256.c" />
     <ClCompile Include="mmu.c" />
     <ClCompile Include="hwid.c" />
     <ClCompile Include="report.c" />
@@ -19,13 +18,13 @@
     <ClCompile Include="drivers.c" />
     <ClCompile Include="pe.c" />
     <ClCompile Include="threads.c" />
+    <ClCompile Include="hash.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="ioctl.h" />
     <ClInclude Include="entry.h" />
     <ClInclude Include="handlers.h" />
-    <ClInclude Include="sha256.h" />
     <ClInclude Include="mmu.h" />
     <ClInclude Include="hwid.h" />
     <ClInclude Include="common.h" />
@@ -41,5 +40,6 @@
     <ClInclude Include="drivers.h" />
     <ClInclude Include="pe.h" />
     <ClInclude Include="threads.h" />
+    <ClInclude Include="hash.h" />
   </ItemGroup>
 </Project>
