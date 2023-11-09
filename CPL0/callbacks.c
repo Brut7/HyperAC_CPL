@@ -8,7 +8,9 @@
 
 #include "pe.h"
 #include "hash.h"
+#include "flow.h"
 #include <ntstrsafe.h>
+
 VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT Context)
 {
 	PAGED_CODE();
@@ -20,7 +22,12 @@ VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT
 	PREPORT_NODE report = NULL;
 	NTSTATUS status = STATUS_SUCCESS;
 
-	status = SafeCopy(page_data, PageStart, sizeof(page_data));
+	if (PageStart == 0 || Context == NULL)
+	{
+		return;
+	}
+
+	status = SafeVirtualCopy(page_data, PageStart, sizeof(page_data));
 	if (!NT_SUCCESS(status))
 	{
 		return;
@@ -44,6 +51,7 @@ VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT
 			hash_data = (PREPORT_HASH)&report->Data;
 			hash_data->HashIndex = i;
 			hash_data->PageStart = PageStart;
+			hash_data->PageFlags = PageFlags;
 			if (!InsertReportNode(report))
 			{
 				MMU_Free(report);
@@ -56,9 +64,8 @@ OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB
 {
 	UNREFERENCED_PARAMETER(Context);
 	PAGED_CODE();
-
+	
 	PEPROCESS process = NULL;
-	HANDLE processHandle = NULL;
 	PEPROCESS parent_process = NULL;
 	HANDLE parent_process_id = NULL;
 	HANDLE process_id = NULL;
@@ -72,7 +79,7 @@ OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB
 	parent_process = IoGetCurrentProcess();
 	parent_process_id = PsGetProcessId(parent_process);
 	image_name = PsGetProcessImageFileName(parent_process);
-
+	
 	if (g_GameProcess == process && g_GameProcessId == process_id && parent_process != g_GameProcess)
 	{
 		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))

@@ -104,3 +104,54 @@ NTSTATUS SHA1_HashBuffer(_In_ UCHAR* Buffer, _In_ SIZE_T Size, _Out_ UCHAR Hash[
 
     return status;
 }
+
+NTSTATUS SHA256_Init(VOID)
+{
+    PAGED_CODE();
+
+    NTSTATUS status = STATUS_SUCCESS;
+
+    status = BCryptOpenAlgorithmProvider(&g_hAlgorithm_SHA256, BCRYPT_SHA256_ALGORITHM, NULL, 0);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = BCryptCreateHash(g_hAlgorithm_SHA256, &g_hHash_SHA256, NULL, 0, NULL, 0, 0);
+    if (!NT_SUCCESS(status))
+    {
+        BCryptCloseAlgorithmProvider(g_hAlgorithm_SHA256, 0);
+        return status;
+    }
+
+    return status;
+}
+
+NTSTATUS SHA256_HashBuffer(_In_ UCHAR* Buffer, _In_ SIZE_T Size, _Out_ UCHAR Hash[20])
+{
+    PAGED_CODE();
+
+    NTSTATUS status = STATUS_SUCCESS;
+
+    status = BCryptHashData(g_hHash_SHA256, Buffer, Size, 0);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = BCryptFinishHash(g_hHash_SHA256, Hash, 20, 0);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    BCryptDestroyHash(g_hHash_SHA256);
+    status = BCryptCreateHash(g_hAlgorithm_SHA256, &g_hHash_SHA256, NULL, 0, NULL, 0, 0);
+    if (!NT_SUCCESS(status))
+    {
+        BCryptCloseAlgorithmProvider(g_hAlgorithm_SHA256, 0);
+        return status;
+    }
+
+    return status;
+}

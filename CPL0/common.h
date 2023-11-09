@@ -6,7 +6,7 @@
 
 #define STATIC static
 
-#define TABLE_SIZE 512
+#define TABLE_LENGTH 512
 
 // Size=32
 typedef struct _SYSTEM_BOOT_ENVIRONMENT_INFORMATION {

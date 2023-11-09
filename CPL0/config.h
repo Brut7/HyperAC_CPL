@@ -42,7 +42,12 @@ extern BCRYPT_ALG_HANDLE g_hAlgorithm_MD5;
 extern BCRYPT_HASH_HANDLE g_hHash_MD5;
 
 extern BCRYPT_ALG_HANDLE g_hAlgorithm_SHA1;
-extern BCRYPT_HASH_HANDLE g_hHash_SHA1 ;
+extern BCRYPT_HASH_HANDLE g_hHash_SHA1;
+
+extern BCRYPT_ALG_HANDLE g_hAlgorithm_SHA256;
+extern BCRYPT_HASH_HANDLE g_hHash_SHA256;
+
+extern volatile LONG g_PT_Walking;
 
 VOID FreeConfig(VOID);
 

@@ -17,30 +17,21 @@ VOID ScannerWorker(PVOID Context)
 	PAGED_CODE();
 
 	CR3 cr3 = { 0 };
-	PEPROCESS process = NULL;
-	PLIST_ENTRY head = NULL;
-	ULONG active_threads = 0;
 	SCAN_CONTEXT ctx = { 0 };
 
 	InterlockedIncrement(&g_ThreadCount);
+	InterlockedIncrement(&g_PT_Walking);
 
 	MMU_Free(Context);
 
-	head = (PLIST_ENTRY)((ULONG64)PsInitialSystemProcess + 0x448); // ActiveProcessLinks
-	for (PLIST_ENTRY curr = head->Flink; curr != head; curr = curr->Flink)
+	if (g_GameProcess != NULL)
 	{
-		process = (PEPROCESS)((ULONG64)curr - 0x448); // ActiveProcessLinks
-		active_threads = *(volatile ULONG*)((ULONG64)process + 0x5f0); // ActiveThreads
-		if (active_threads > 0)
-		{
-			DebugMessage("%s", PsGetProcessImageFileName(process));
-			KeAttachProcess(process);
-			cr3.AsUInt = __readcr3();
-			KeDetachProcess();
+		KeAttachProcess(g_GameProcess);
+		cr3.AsUInt = __readcr3();
+		KeDetachProcess();
 
-			ctx.Mode = UserMode;
-			WalkPageTables(cr3, OnEachPage, &ctx);
-		}
+		ctx.Mode = UserMode;
+		WalkPageTables(cr3, OnEachPage, &ctx);
 	}
 
 	cr3.AsUInt = __readcr3();
@@ -48,6 +39,7 @@ VOID ScannerWorker(PVOID Context)
 	WalkPageTables(cr3, OnEachPage, &ctx);
 
 	DebugMessage("finished scanning");
+	InterlockedDecrement(&g_PT_Walking);
 	InterlockedDecrement(&g_ThreadCount);
 }
 
@@ -61,23 +53,11 @@ VOID MainThread(_In_opt_ PVOID Context)
 
 	InterlockedIncrement(&g_ThreadCount);
 
-	status = MD5_Init();
-	if (!NT_SUCCESS(status))
-	{
-		DebugMessage("failed to initialize MD5: 0x%08X\n", status);
-	}
-
-	status = SHA1_Init();
-	if (!NT_SUCCESS(status))
-	{
-		DebugMessage("failed to initialize SHA1: 0x%08X\n", status);
-	}
+	(VOID)MD5_Init();
+	(VOID)SHA1_Init();
+	(VOID)SHA256_Init();
 
 	PeformVmExitCheck();
-
-	worker = (PWORK_QUEUE_ITEM)MMU_Alloc(sizeof(WORK_QUEUE_ITEM));
-	ExInitializeWorkItem(worker, ScannerWorker, worker);
-	ExQueueWorkItem(worker, BackgroundWorkQueue);
 
 	RTL_MODULE_EXTENDED_INFO ci;
 	if (NT_SUCCESS(FindSystemModuleByName("CI.dll", &ci)))
@@ -89,9 +69,21 @@ VOID MainThread(_In_opt_ PVOID Context)
 	{
 		ValidateReportList();
 
-		// DetectHiddenThreads();
+		if (InterlockedExchange(&g_PT_Walking, g_PT_Walking) == 0)
+		{
+			DebugMessage("added work");
+			worker = (PWORK_QUEUE_ITEM)MMU_Alloc(sizeof(WORK_QUEUE_ITEM));
+			ExInitializeWorkItem(worker, ScannerWorker, worker);
+			ExQueueWorkItem(worker, BackgroundWorkQueue);
+		}
+		else
+		{
+			DebugMessage("already working!");
+		}
 
-		Sleep(100);
+		//// DetectHiddenThreads();
+
+		Sleep(1500);
 	}
 
 ExitThread:

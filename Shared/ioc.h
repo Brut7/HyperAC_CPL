@@ -79,6 +79,7 @@ typedef struct _REPORT_HASH
 {
 	USHORT HashIndex;
 	ULONG64 PageStart;
+	ULONG PageFlags;
 }REPORT_HASH, *PREPORT_HASH;
 
 typedef struct _REPORT_SIGNATURE

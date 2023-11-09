@@ -9,14 +9,14 @@ PIMAGE_NT_HEADERS GetNtHeaders(_In_ ULONG64 Base)
 	IMAGE_DOS_HEADER dos = { 0 };
 
 
-	status = SafeCopy(&dos, (CONST PVOID)Base, sizeof(IMAGE_DOS_HEADER));
+	status = SafeVirtualCopy(&dos, (CONST PVOID)Base, sizeof(IMAGE_DOS_HEADER));
 	if (!NT_SUCCESS(status) || dos.e_magic != IMAGE_DOS_SIGNATURE)
 	{
 		return NULL;
 	}
 
 	nt = MMU_Alloc(sizeof(IMAGE_NT_HEADERS));
-	status = SafeCopy(nt, (CONST PVOID)(Base + dos.e_lfanew), sizeof(IMAGE_NT_HEADERS));
+	status = SafeVirtualCopy(nt, (CONST PVOID)(Base + dos.e_lfanew), sizeof(IMAGE_NT_HEADERS));
 	if (!NT_SUCCESS(status) || nt->Signature != IMAGE_NT_SIGNATURE)
 	{
 		MMU_Free(nt);
@@ -41,7 +41,7 @@ PIMAGE_EXPORT_DIRECTORY GetExportDirectory(_In_ ULONG64 Base, _In_ PIMAGE_NT_HEA
 	}
 
 	export_dir = (PIMAGE_EXPORT_DIRECTORY)MMU_Alloc(sizeof(IMAGE_EXPORT_DIRECTORY));
-	status = SafeCopy(export_dir, (CONST PVOID)(Base + export_va), sizeof(IMAGE_EXPORT_DIRECTORY));
+	status = SafeVirtualCopy(export_dir, (CONST PVOID)(Base + export_va), sizeof(IMAGE_EXPORT_DIRECTORY));
 	if (!NT_SUCCESS(status))
 	{
 		MMU_Free(export_dir);
@@ -86,7 +86,7 @@ ULONG64 FindExport(_In_ ULONG64 Base, _In_ CONST CHAR* Name)
 	export_func_ord = MMU_Alloc(export_dir->NumberOfFunctions * sizeof(USHORT));
 	export_func_va = MMU_Alloc(export_dir->NumberOfFunctions * sizeof(ULONG));
 
-	status = SafeCopy(export_func_ord, (CONST PVOID)(Base + export_dir->AddressOfNameOrdinals), export_dir->NumberOfFunctions * sizeof(USHORT));
+	status = SafeVirtualCopy(export_func_ord, (CONST PVOID)(Base + export_dir->AddressOfNameOrdinals), export_dir->NumberOfFunctions * sizeof(USHORT));
 	if (!NT_SUCCESS(status))
 	{
 		MMU_Free(export_func_ord);
@@ -94,7 +94,7 @@ ULONG64 FindExport(_In_ ULONG64 Base, _In_ CONST CHAR* Name)
 		return 0;
 	}
 
-	status = SafeCopy(export_func_va, (CONST PVOID)(Base + export_dir->AddressOfFunctions), export_dir->NumberOfFunctions * sizeof(ULONG));
+	status = SafeVirtualCopy(export_func_va, (CONST PVOID)(Base + export_dir->AddressOfFunctions), export_dir->NumberOfFunctions * sizeof(ULONG));
 	if (!NT_SUCCESS(status))
 	{
 		MMU_Free(export_func_ord);
@@ -107,13 +107,13 @@ ULONG64 FindExport(_In_ ULONG64 Base, _In_ CONST CHAR* Name)
 
 	for (ULONG i = 0; i < export_dir->NumberOfNames; ++i)
 	{
-		status = SafeCopy(&export_name_va, (CONST PVOID)(Base + export_dir->AddressOfNames + i * sizeof(ULONG)), sizeof(ULONG));
+		status = SafeVirtualCopy(&export_name_va, (CONST PVOID)(Base + export_dir->AddressOfNames + i * sizeof(ULONG)), sizeof(ULONG));
 		if (!NT_SUCCESS(status))
 		{
 			continue;
 		}
 
-		status = SafeCopy(export_name, (CONST PVOID)(Base + export_name_va), name_length);
+		status = SafeVirtualCopy(export_name, (CONST PVOID)(Base + export_name_va), name_length);
 		if (!NT_SUCCESS(status) || strncmp(export_name, Name, name_length) != 0)
 		{
 			continue;
