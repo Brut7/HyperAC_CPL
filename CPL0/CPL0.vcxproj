@@ -129,7 +129,8 @@
       <AdditionalOptions>/INTEGRITYCHECK %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>PowerShell.exe -ExecutionPolicy Bypass -File "$(ProjectDir)scripts\driver_deployer.ps1" -targetDir "$(TargetDir.TrimEnd('\'))" -targetName "$(TargetName)"</Command>
+      <Command>PowerShell.exe -ExecutionPolicy Bypass -File "$(ProjectDir)scripts\driver_deployer.ps1" -targetDir "$(TargetDir.TrimEnd('\'))" -targetName "$(TargetName)" -loadDriver "yes"
+</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>PowerShell.exe -ExecutionPolicy Bypass -File "$(ProjectDir)scripts\restore_snapshot.ps1" -vmxPath "C:\Users\gb199\Documents\Virtual Machines\tiny\tiny.vmx" -snapshotName "crab"
