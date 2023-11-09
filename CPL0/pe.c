@@ -85,12 +85,6 @@ ULONG64 FindExport(_In_ ULONG64 Base, _In_ CONST CHAR* Name)
 
 	export_func_ord = MMU_Alloc(export_dir->NumberOfFunctions * sizeof(USHORT));
 	export_func_va = MMU_Alloc(export_dir->NumberOfFunctions * sizeof(ULONG));
-	if (export_func_ord == NULL || export_func_va == NULL)
-	{
-		MMU_Free(export_func_ord);
-		MMU_Free(export_func_va);
-		return 0;
-	}
 
 	status = SafeCopy(export_func_ord, (CONST PVOID)(Base + export_dir->AddressOfNameOrdinals), export_dir->NumberOfFunctions * sizeof(USHORT));
 	if (!NT_SUCCESS(status))

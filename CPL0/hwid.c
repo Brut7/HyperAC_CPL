@@ -4,12 +4,14 @@
 #include "mmu.h"
 #include "config.h"
 
-NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[32]) {
+NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[SHA1_SIZE]) {
 	PAGED_CODE();
 
 	NTSTATUS status = STATUS_SUCCESS;
 	ULONG req_size = 0;
 	PSYSTEM_BOOT_ENVIRONMENT_INFORMATION boot_info = NULL;
+
+	memset(Hash, 0, SHA1_SIZE);
 
 	status = ZwQuerySystemInformation(SystemBootEnvironmentInformation, NULL, 0, &req_size);
 	if (status != STATUS_INFO_LENGTH_MISMATCH) {
@@ -18,11 +20,6 @@ NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[32]) {
 	}
 
 	boot_info = (PSYSTEM_BOOT_ENVIRONMENT_INFORMATION)MMU_Alloc(req_size);
-	if (boot_info == NULL) {
-		DebugMessage("MMU_Alloc failed\n");
-		return STATUS_NO_MEMORY;
-	};
-
 	status = ZwQuerySystemInformation(SystemBootEnvironmentInformation, boot_info, req_size, &req_size);
 	if (!NT_SUCCESS(status)) {
 		DebugMessage("ZwQuerySystemInformation failed: 0x%08X\n", status);
@@ -39,10 +36,14 @@ NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[32]) {
 	return status;
 }
 
-NTSTATUS HWID_GetMonitorEDID(_Out_ UCHAR Hash[32]) {
+NTSTATUS HWID_GetMonitorEDID(_Out_ UCHAR Hash[SHA1_SIZE]) {
 	PAGED_CODE();
 
 	NTSTATUS status = STATUS_SUCCESS;
+
+
+	memset(Hash, 0, SHA1_SIZE);
+
 
 	/* TODO */
 
