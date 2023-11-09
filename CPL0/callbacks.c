@@ -154,7 +154,22 @@ OB_PREOP_CALLBACK_STATUS OnThreadHandleCreation(_In_ PVOID Context, _Inout_ POB_
 
 		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
 		{
-			goto ExitCallback;
+			WCHAR path_buffer[MAX_PATH];
+			UNICODE_STRING resolved_path;
+			resolved_path.Buffer = path_buffer;
+			GetFilePathFromProcess(parent_process, &resolved_path);
+
+			UCHAR hash_buffer[32];
+			LoadAndCalculateHash(&resolved_path, hash_buffer, sizeof(hash_buffer));
+			BOOL successfully_authenticated = AuthenticateApplication(&resolved_path, hash_buffer, 2);
+			if (successfully_authenticated)
+			{
+				goto ExitCallback;
+			}
+			else
+			{
+				DebugMessage("Failed to authenticate %wZ", &resolved_path);
+			}
 		}
 
 		//DebugMessage("Unknown process blocked (%s)\n", image_name);
