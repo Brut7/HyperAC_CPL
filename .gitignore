@@ -385,3 +385,4 @@ FodyWeavers.xsd
 *.til
 *.i64
 *.sys
+/CPL0/scripts
