@@ -5,7 +5,7 @@
 
 NTSTATUS SafeVirtualCopy(_Out_ PVOID Dst, _In_ CONST PVOID Src, _In_ SIZE_T Size)
 {
-	PAGED_CODE();
+	
 
 	SIZE_T copied_bytes = 0;
 	NTSTATUS status = STATUS_SUCCESS;
@@ -26,7 +26,7 @@ NTSTATUS SafeVirtualCopy(_Out_ PVOID Dst, _In_ CONST PVOID Src, _In_ SIZE_T Size
 
 NTSTATUS SafePhysicalCopy(_Out_ PVOID Dst, _In_ CONST PVOID Src, _In_ SIZE_T Size)
 {
-	PAGED_CODE();
+	
 
 	SIZE_T copied_bytes = 0;
 	NTSTATUS status = STATUS_SUCCESS;
@@ -47,7 +47,7 @@ NTSTATUS SafePhysicalCopy(_Out_ PVOID Dst, _In_ CONST PVOID Src, _In_ SIZE_T Siz
 
 ULONG64 FindSignature(_In_ UCHAR* Data, _In_ SIZE_T Size, _In_ CONST CHAR* Pattern, _In_ CONST CHAR* Mask)
 {
-	PAGED_CODE();
+	
 
 	SIZE_T length = 0;
 	
@@ -74,7 +74,7 @@ ULONG64 FindSignature(_In_ UCHAR* Data, _In_ SIZE_T Size, _In_ CONST CHAR* Patte
 
 ULONG64 ToVirtual(_In_ LONG64 PhysicalAddress)
 {
-	PAGED_CODE();
+	
 
 	PVOID va = NULL;
 
@@ -84,7 +84,7 @@ ULONG64 ToVirtual(_In_ LONG64 PhysicalAddress)
 
 LONG64 ToPhysical(_In_ ULONG64 VirtualAddress)
 {
-	PAGED_CODE();
+	
 
 	PHYSICAL_ADDRESS pa = { 0 };
 

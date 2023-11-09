@@ -8,7 +8,7 @@
 
 NTSTATUS IOCTL_GetHWID(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
 {
-    PAGED_CODE();
+    
 
     CPL0_GET_HWID_REQ req = {0}; 
     PCPL0_GET_HWID_RES res = NULL;
@@ -28,7 +28,7 @@ NTSTATUS IOCTL_GetHWID(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
 
 NTSTATUS IOCTL_GetReportsSize(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
 {
-    PAGED_CODE();
+    
 
     CPL0_GET_REPORTS_SIZE_REQ req = { 0 };
     PCPL0_GET_REPORTS_SIZE_RES res = NULL;
@@ -64,7 +64,7 @@ NTSTATUS IOCTL_GetReportsSize(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
 
 NTSTATUS IOCTL_GetReports(_Inout_ PVOID Buffer, _Out_ SIZE_T* pSize)
 {
-    PAGED_CODE();
+    
 
     CPL0_GET_REPORTS_REQ req = { 0 };
     PCPL0_GET_REPORTS_RES res = NULL;

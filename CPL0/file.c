@@ -97,7 +97,7 @@ NTSTATUS ReadFileIntoBuffer(
 	IO_STATUS_BLOCK ioStatusBlock;
 	FILE_STANDARD_INFORMATION fileInformation;
 	PVOID buffer = NULL;
-
+	
 	InitializeObjectAttributes(&objectAttributes, FileName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
 	status = ZwCreateFile(&fileHandle, GENERIC_READ, &objectAttributes, &ioStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
 	if (!NT_SUCCESS(status))

@@ -5,7 +5,7 @@
 #include "config.h"
 
 NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[SHA1_SIZE]) {
-	PAGED_CODE();
+	
 
 	NTSTATUS status = STATUS_SUCCESS;
 	ULONG req_size = 0;
@@ -37,7 +37,7 @@ NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[SHA1_SIZE]) {
 }
 
 NTSTATUS HWID_GetMonitorEDID(_Out_ UCHAR Hash[SHA1_SIZE]) {
-	PAGED_CODE();
+	
 
 	NTSTATUS status = STATUS_SUCCESS;
 

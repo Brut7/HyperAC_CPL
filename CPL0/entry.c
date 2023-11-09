@@ -13,7 +13,7 @@
 static VOID DriverUnload(_In_ PDRIVER_OBJECT DriverObject)
 {
     UNREFERENCED_PARAMETER(DriverObject);
-    PAGED_CODE();
+    
 
     InterlockedExchange(&g_UnloadThreads, TRUE);
 
@@ -36,7 +36,7 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     _In_ PUNICODE_STRING RegistryPath)
 {
     UNREFERENCED_PARAMETER(RegistryPath);
-    PAGED_CODE();
+    
 
     g_DriverObject = DriverObject;
 

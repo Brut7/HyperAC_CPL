@@ -28,7 +28,7 @@ PIMAGE_NT_HEADERS GetNtHeaders(_In_ ULONG64 Base)
 
 PIMAGE_EXPORT_DIRECTORY GetExportDirectory(_In_ ULONG64 Base, _In_ PIMAGE_NT_HEADERS Nt)
 {
-	PAGED_CODE();
+	
 
 	LONG export_va = 0;
 	PIMAGE_EXPORT_DIRECTORY export_dir = NULL;
@@ -53,7 +53,7 @@ PIMAGE_EXPORT_DIRECTORY GetExportDirectory(_In_ ULONG64 Base, _In_ PIMAGE_NT_HEA
 
 ULONG64 FindExport(_In_ ULONG64 Base, _In_ CONST CHAR* Name)
 {
-	PAGED_CODE();
+	
 
 	PIMAGE_EXPORT_DIRECTORY export_dir = NULL;
 	PIMAGE_NT_HEADERS nt = NULL;

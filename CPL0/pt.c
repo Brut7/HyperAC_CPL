@@ -9,7 +9,7 @@
 
 ULONG GetPTEFlags(_In_ PTE_64 pte)
 {
-	PAGED_CODE();
+	
 
 	ULONG flags = 0;
 
@@ -34,7 +34,7 @@ ULONG GetPTEFlags(_In_ PTE_64 pte)
 
 ULONG GetPDEFlags(_In_ PDE_64 pde)
 {
-	PAGED_CODE();
+	
 
 	ULONG flags = 0;
 
@@ -59,7 +59,7 @@ ULONG GetPDEFlags(_In_ PDE_64 pde)
 
 ULONG GetPDPTEFlags(_In_ PDPTE_64 pdpte)
 {
-	PAGED_CODE();
+	
 
 	ULONG flags = 0;
 
@@ -84,7 +84,7 @@ ULONG GetPDPTEFlags(_In_ PDPTE_64 pdpte)
 
 VOID OnEachPDE(_In_ PDE_64 pde, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID), _In_opt_ PVOID Context)
 {
-	PAGED_CODE();
+	
 
 	PTE_64* ptes = NULL;
 	PTE_64 pte = { 0 };
@@ -120,7 +120,7 @@ VOID OnEachPDE(_In_ PDE_64 pde, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID), _
 
 VOID OnEachPDPTE(_In_ PDPTE_64 pdpte, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID), _In_opt_ PVOID Context)
 {
-	PAGED_CODE();
+	
 
 	PDE_64* pdes = NULL;
 	PDE_64 pde = { 0 };
@@ -160,7 +160,7 @@ VOID OnEachPDPTE(_In_ PDPTE_64 pdpte, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVO
 
 VOID OnEachPML4E(_In_ PML4E_64 pml4e, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID), _In_opt_ PVOID Context)
 {
-	PAGED_CODE();
+	
 
 	PDPTE_64* pdptes = NULL;
 	PDPTE_64 pdpte = { 0 };
@@ -201,7 +201,7 @@ VOID OnEachPML4E(_In_ PML4E_64 pml4e, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVO
 
 VOID WalkPageTables(_In_ CR3 cr3, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID), _In_opt_ PVOID Context)
 {
-	PAGED_CODE();
+	
 
 	PML4E_64* pml4es = NULL;
 	PML4E_64 pml4e = { 0 };
