@@ -1,6 +1,11 @@
 #include "pt.h"
 #include "common.h"
+#include "memory.h"
 #include <ntddk.h>
+#include "config.h"
+#include "flow.h"
+#include "mmu.h"
+
 
 ULONG GetPTEFlags(_In_ PTE_64 pte)
 {
@@ -57,7 +62,7 @@ ULONG GetPDPTEFlags(_In_ PDPTE_64 pdpte)
 	PAGED_CODE();
 
 	ULONG flags = 0;
-	
+
 	flags = PAGE_READABLE;
 	if (!pdpte.ExecuteDisable)
 	{
@@ -83,17 +88,18 @@ VOID OnEachPDE(_In_ PDE_64 pde, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID), _
 
 	PTE_64* ptes = NULL;
 	PTE_64 pte = { 0 };
-	PHYSICAL_ADDRESS phys_addr = { 0 };
-	ULONG64 page_start = 0;
-	
-	phys_addr.QuadPart = pde.PageFrameNumber << PAGE_SHIFT;
-	ptes = (PTE_64*)MmGetVirtualForPhysical(phys_addr);
-	if (!MmIsAddressValid(ptes))
-	{
-		return 0;
-	}
+	NTSTATUS status = STATUS_SUCCESS;
+	LONG64 page_start = 0;
+	ULONG page_flags = 0;
 
-	for (USHORT i = 0; i < TABLE_SIZE; ++i)
+	
+	ptes = ToVirtual(pde.PageFrameNumber << PAGE_SHIFT);
+	if (ptes == NULL)
+	{
+		return;
+	}
+		
+	for (USHORT i = 0; i < TABLE_LENGTH; ++i)
 	{
 		pte = ptes[i];
 		if (!pte.Present)
@@ -101,14 +107,14 @@ VOID OnEachPDE(_In_ PDE_64 pde, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID), _
 			continue;
 		}
 
-		phys_addr.QuadPart = pte.PageFrameNumber << PAGE_SHIFT;
-		page_start = MmGetVirtualForPhysical(phys_addr);
-		if (!MmIsAddressValid(page_start))
+		page_start = ToVirtual(pte.PageFrameNumber << PAGE_SHIFT);
+		if (page_start == 0 || MmIsAddressValid(page_start) == FALSE)
 		{
 			continue;
 		}
 
-		OnEachPage(page_start, GetPTEFlags(pte), Context);
+		page_flags = GetPDEFlags(pde);
+		OnEachPage(page_start, page_flags, Context);
 	}
 }
 
@@ -118,36 +124,29 @@ VOID OnEachPDPTE(_In_ PDPTE_64 pdpte, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVO
 
 	PDE_64* pdes = NULL;
 	PDE_64 pde = { 0 };
-	PHYSICAL_ADDRESS phys_addr = { 0 };
-	ULONG64 page_start = 0;
+	NTSTATUS status = STATUS_SUCCESS;
+	LONG64 page_start = 0;
 	ULONG page_flags = 0;
 
-	phys_addr.QuadPart = pdpte.PageFrameNumber << PAGE_SHIFT;
-	pdes = (PDPTE_64*)MmGetVirtualForPhysical(phys_addr);
-	if (!MmIsAddressValid(pdes))
+	pdes = ToVirtual(pdpte.PageFrameNumber << PAGE_SHIFT);
+	if (pdes == NULL)
 	{
-		return 0;
+		return;
 	}
 
-	for (USHORT i = 0; i < TABLE_SIZE; ++i)
+	for (USHORT i = 0; i < TABLE_LENGTH; ++i)
 	{
 		pde = pdes[i];
-		if (!pdpte.Present)
+		if (!pde.Present)
 		{
 			continue;
 		}
 
 		if (pde.LargePage)
 		{
-			phys_addr.QuadPart = pdpte.PageFrameNumber << PAGE_SHIFT;
-			page_start = MmGetVirtualForPhysical(phys_addr);
-			if (!MmIsAddressValid(page_start))
-			{
-				continue;
-			}
-
 			page_flags = GetPDEFlags(pde);
-			for (SIZE_T i = 0; i < TABLE_SIZE; ++i)
+			page_start = pdpte.PageFrameNumber << PAGE_SHIFT;
+			for (SIZE_T i = 0; i < TABLE_LENGTH; ++i)
 			{
 				OnEachPage(page_start + i * PAGE_SIZE, page_flags, Context);
 			}
@@ -156,7 +155,6 @@ VOID OnEachPDPTE(_In_ PDPTE_64 pdpte, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVO
 		{
 			OnEachPDE(pde, OnEachPage, Context);
 		}
-
 	}
 }
 
@@ -166,18 +164,18 @@ VOID OnEachPML4E(_In_ PML4E_64 pml4e, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVO
 
 	PDPTE_64* pdptes = NULL;
 	PDPTE_64 pdpte = { 0 };
-	PHYSICAL_ADDRESS phys_addr = { 0 };
-	ULONG64 page_start = 0;
+	NTSTATUS status = STATUS_SUCCESS;
+	LONG64 page_start = 0;
 	ULONG page_flags = 0;
 
-	phys_addr.QuadPart = pml4e.PageFrameNumber << PAGE_SHIFT;
-	pdptes = (PDPTE_64*)MmGetVirtualForPhysical(phys_addr);
-	if (!MmIsAddressValid(pdptes))
+
+	pdptes = ToVirtual(pml4e.PageFrameNumber << PAGE_SHIFT);
+	if (pdptes == NULL)
 	{
-		return 0;
+		return;
 	}
 
-	for (USHORT i = 0; i < TABLE_SIZE; ++i)
+	for (USHORT i = 0; i < TABLE_LENGTH; ++i)
 	{
 		pdpte = pdptes[i];
 		if (!pdpte.Present)
@@ -187,15 +185,9 @@ VOID OnEachPML4E(_In_ PML4E_64 pml4e, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVO
 
 		if (pdpte.LargePage)
 		{
-			phys_addr.QuadPart = pdpte.PageFrameNumber << PAGE_SHIFT;
-			page_start = MmGetVirtualForPhysical(phys_addr);
-			if (!MmIsAddressValid(page_start))
-			{
-				continue;
-			}
-
 			page_flags = GetPDPTEFlags(pdpte);
-			for (SIZE_T i = 0; i < TABLE_SIZE * TABLE_SIZE; ++i)
+			page_start = pdpte.PageFrameNumber << PAGE_SHIFT;
+			for (ULONG i = 0; i < TABLE_LENGTH * TABLE_LENGTH; ++i)
 			{
 				OnEachPage(page_start + i * PAGE_SIZE, page_flags, Context);
 			}
@@ -213,16 +205,15 @@ VOID WalkPageTables(_In_ CR3 cr3, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID),
 
 	PML4E_64* pml4es = NULL;
 	PML4E_64 pml4e = { 0 };
-	PHYSICAL_ADDRESS phys_addr = { 0 };
+	NTSTATUS status = STATUS_SUCCESS;
 
-	phys_addr.QuadPart = cr3.AddressOfPageDirectory << PAGE_SHIFT;
-	pml4es = (PML4E_64*)MmGetVirtualForPhysical(phys_addr);
-	if (!MmIsAddressValid(pml4es))
+	pml4es = ToVirtual(cr3.AddressOfPageDirectory << PAGE_SHIFT);
+	if (pml4es == NULL)
 	{
-		return 0;
+		return;
 	}
 
-	for (USHORT i = 0; i < TABLE_SIZE; ++i)
+	for (USHORT i = 0; i < TABLE_LENGTH; ++i)
 	{
 		pml4e = pml4es[i];
 		if (!pml4e.Present)
