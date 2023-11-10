@@ -3,8 +3,6 @@
 
 PVOID MMU_Alloc(_In_ SIZE_T Size)
 {
-	
-
 	PVOID pool = NULL;
 
 	if (Size == 0)
@@ -12,7 +10,7 @@ PVOID MMU_Alloc(_In_ SIZE_T Size)
 		return NULL;
 	}
 
-	pool = ExAllocatePool(PagedPool, Size);
+	pool = ExAllocatePool(NonPagedPool, Size);
 	if (!pool)
 	{
 		__fastfail(FAST_FAIL_POOL_ERROR);
@@ -26,13 +24,11 @@ PVOID MMU_Alloc(_In_ SIZE_T Size)
 
 VOID MMU_Free(_In_ PVOID Pool)
 {
-	
-
 	if (Pool == 0)
 	{
 		return;
 	}
 
-	ExFreePool(Pool);
+	ExFreePoolWithTag(Pool, 0);
 	InterlockedIncrement64(&g_FreeCount);
 }
