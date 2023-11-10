@@ -3,7 +3,6 @@
 #include "report.h"
 #include "mmu.h"
 #include "memory.h"
-#include "file.h"
 #include <ioc.h>
 
 #include "pe.h"
@@ -13,8 +12,6 @@
 
 VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT Context)
 {
-	
-
 	UCHAR page_data[PAGE_SIZE] = { 0 };
 	SCAN_HASH hash = { 0 };
 	UCHAR page_hash[16] = { 0 };
@@ -84,42 +81,26 @@ OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB
 	{
 		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
 		{
-			WCHAR path_buffer[MAX_PATH];
-			UNICODE_STRING resolved_path;
-			resolved_path.Buffer = path_buffer;
-			GetFilePathFromProcess(parent_process, &resolved_path);
-
-			UCHAR hash_buffer[32];
-			LoadAndCalculateHash(&resolved_path, hash_buffer, sizeof(hash_buffer));
-			BOOL successfully_authenticated = AuthenticateApplication(&resolved_path, hash_buffer, 2);
-			if (successfully_authenticated)
-			{
-				goto ExitCallback;
-			}
-			else
-			{
-				DebugMessage("Failed to authenticate %wZ", &resolved_path);
-			}
+			goto ExitCallback;
 		}
 
 		OpInfo->Parameters->CreateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
 		OpInfo->Parameters->DuplicateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
+		
 		report = MMU_Alloc(REPORT_HEADER_SIZE + sizeof(REPORT_BLOCKED_PROCESS));
-		if (report)
-		{
-			report->Id = REPORT_ID_BLOCKED_PROCESS;
-			report->DataSize = sizeof(REPORT_BLOCKED_PROCESS);
+		report->Id = REPORT_ID_BLOCKED_PROCESS;
+		report->DataSize = sizeof(REPORT_BLOCKED_PROCESS);
 
-			data = (PREPORT_BLOCKED_PROCESS)&report->Data;
-			data->ProcessId = parent_process_id;
-			strncpy(data->ImageName, image_name, sizeof(data->ImageName) - 1);
-			data->ImageName[sizeof(data->ImageName) - 1] = '\0';
-			if (!InsertReportNode(report))
-			{
-				MMU_Free(report);
-			}
+		data = (PREPORT_BLOCKED_PROCESS)&report->Data;
+		data->ProcessId = parent_process_id;
+		strncpy(data->ImageName, image_name, 14);
+
+		if (!InsertReportNode(report))
+		{
+			MMU_Free(report);
 		}
 	}
+
 ExitCallback:
 	return OB_PREOP_SUCCESS;
 }
@@ -150,29 +131,11 @@ OB_PREOP_CALLBACK_STATUS OnThreadHandleCreation(_In_ PVOID Context, _Inout_ POB_
 
 	if (g_GameProcess == process && g_GameProcessId == process_id && parent_process != g_GameProcess)
 	{
-		//DebugMessage("(%x) (%s) %i %i %i", status, image_name, protection.Signer, protection.Audit, protection.Type);
-
 		if (!strcmp(image_name, "csrss.exe") || !strcmp(image_name, "explorer.exe") || !strcmp(image_name, "lsass.exe"))
 		{
-			WCHAR path_buffer[MAX_PATH];
-			UNICODE_STRING resolved_path;
-			resolved_path.Buffer = path_buffer;
-			GetFilePathFromProcess(parent_process, &resolved_path);
-
-			UCHAR hash_buffer[32];
-			LoadAndCalculateHash(&resolved_path, hash_buffer, sizeof(hash_buffer));
-			BOOL successfully_authenticated = AuthenticateApplication(&resolved_path, hash_buffer, 2);
-			if (successfully_authenticated)
-			{
-				goto ExitCallback;
-			}
-			else
-			{
-				DebugMessage("Failed to authenticate %wZ", &resolved_path);
-			}
+			goto ExitCallback;
 		}
 
-		//DebugMessage("Unknown process blocked (%s)\n", image_name);
 		OpInfo->Parameters->CreateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
 		OpInfo->Parameters->DuplicateHandleInformation.DesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_CREATE_PROCESS;
 
@@ -183,7 +146,7 @@ OB_PREOP_CALLBACK_STATUS OnThreadHandleCreation(_In_ PVOID Context, _Inout_ POB_
 		data = (REPORT_BLOCKED_THREAD*)&report->Data;
 		data->ThreadId = thread_id;
 		data->ProcessId = parent_process_id;
-		strcpy(data->ImageName, image_name);
+		strncpy(data->ImageName, image_name, 14);
 
 		if (!InsertReportNode(report))
 		{

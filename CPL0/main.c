@@ -14,8 +14,6 @@
 
 VOID ScannerWorker(PVOID Context)
 {
-	
-
 	CR3 cr3 = { 0 };
 	SCAN_CONTEXT ctx = { 0 };
 
@@ -47,7 +45,6 @@ VOID MainThread(_In_opt_ PVOID Context)
 {
 	UNREFERENCED_PARAMETER(Context);
 	
-
 	NTSTATUS status = STATUS_SUCCESS;
 	PWORK_QUEUE_ITEM worker = NULL;
 

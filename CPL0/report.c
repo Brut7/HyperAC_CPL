@@ -5,8 +5,6 @@
 
 VOID ValidateReportList()
 {
-    
-
     REPORT_NODE* node = NULL;
     USHORT count = 0;
 
@@ -29,11 +27,10 @@ VOID ValidateReportList()
 
 REPORT_NODE* GetReportNode(_In_ USHORT Index)
 {
-    
-
     REPORT_NODE* node = NULL;
     USHORT count = 0;
 
+    ValidateReportList();
     SpinlockAcquire(&g_ReportLock);
 
     node = g_ReportHead.Next;
@@ -49,11 +46,10 @@ REPORT_NODE* GetReportNode(_In_ USHORT Index)
 
 USHORT GetReportCount()
 {
-    
-
     USHORT count = 0;
     REPORT_NODE* node = NULL;
 
+    ValidateReportList();
     SpinlockAcquire(&g_ReportLock);
 
     node = g_ReportHead.Next;
@@ -69,18 +65,16 @@ USHORT GetReportCount()
 
 BOOLEAN InsertReportNode(_In_ REPORT_NODE* NewNode)
 {
-    
-
     USHORT count = 0;
     REPORT_NODE* node = NULL;
     REPORT_NODE* last = NULL;
-    REPORT_NODE* validator_node = NULL;
 
     if (NewNode == NULL)
     {
         return FALSE;
     }
 
+    ValidateReportList();
     SpinlockAcquire(&g_ReportLock);
 
     node = g_ReportHead.Next;
@@ -115,11 +109,10 @@ BOOLEAN InsertReportNode(_In_ REPORT_NODE* NewNode)
 
 VOID FreeReportList()
 {
-    
-
     REPORT_NODE* node = NULL;
     REPORT_NODE* next = NULL;
 
+    ValidateReportList();
     SpinlockAcquire(&g_ReportLock);
 
     node = g_ReportHead.Next;

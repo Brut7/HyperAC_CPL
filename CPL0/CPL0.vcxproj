@@ -144,7 +144,6 @@
     <ClCompile Include="config.c" />
     <ClCompile Include="drivers.c" />
     <ClCompile Include="entry.c" />
-    <ClCompile Include="file.c" />
     <ClCompile Include="flow.c" />
     <ClCompile Include="handlers.c" />
     <ClCompile Include="hv.c" />
@@ -166,7 +165,6 @@
     <ClInclude Include="config.h" />
     <ClInclude Include="drivers.h" />
     <ClInclude Include="entry.h" />
-    <ClInclude Include="file.h" />
     <ClInclude Include="flow.h" />
     <ClInclude Include="handlers.h" />
     <ClInclude Include="hv.h" />

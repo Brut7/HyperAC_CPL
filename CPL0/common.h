@@ -459,6 +459,8 @@ typedef NTSTATUS(_stdcall* PFN_CiCheckSignedFile)(
     LARGE_INTEGER* signingTime,
     PolicyInfo* policyInfoForTimestampingAuthority
     );
+
 PVOID NTAPI PsGetProcessSectionBaseAddress(PEPROCESS Process);
-PIMAGE_NT_HEADERS NTAPI RtlImageNtHeader( IN PVOID                ModuleAddress);
+PIMAGE_NT_HEADERS NTAPI RtlImageNtHeader(IN PVOID ModuleAddress);
+
 #endif // H_COMMON
