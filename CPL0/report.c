@@ -5,7 +5,7 @@
 
 VOID ValidateReportList()
 {
-    PAGED_CODE();
+    
 
     REPORT_NODE* node = NULL;
     USHORT count = 0;
@@ -29,7 +29,7 @@ VOID ValidateReportList()
 
 REPORT_NODE* GetReportNode(_In_ USHORT Index)
 {
-    PAGED_CODE();
+    
 
     REPORT_NODE* node = NULL;
     USHORT count = 0;
@@ -49,7 +49,7 @@ REPORT_NODE* GetReportNode(_In_ USHORT Index)
 
 USHORT GetReportCount()
 {
-    PAGED_CODE();
+    
 
     USHORT count = 0;
     REPORT_NODE* node = NULL;
@@ -69,7 +69,7 @@ USHORT GetReportCount()
 
 BOOLEAN InsertReportNode(_In_ REPORT_NODE* NewNode)
 {
-    PAGED_CODE();
+    
 
     USHORT count = 0;
     REPORT_NODE* node = NULL;
@@ -115,7 +115,7 @@ BOOLEAN InsertReportNode(_In_ REPORT_NODE* NewNode)
 
 VOID FreeReportList()
 {
-    PAGED_CODE();
+    
 
     REPORT_NODE* node = NULL;
     REPORT_NODE* next = NULL;

@@ -51,6 +51,4 @@ extern volatile LONG g_PT_Walking;
 
 VOID FreeConfig(VOID);
 
-#pragma alloc_text(PAGE, FreeConfig)
-
 #endif// H_CONFIG

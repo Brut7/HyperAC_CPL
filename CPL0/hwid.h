@@ -6,7 +6,4 @@
 NTSTATUS HWID_GetBootUUID(_Out_ UCHAR Hash[32]);
 NTSTATUS HWID_GetMonitorEDID(_Out_ UCHAR Hash[32]);
 
-#pragma alloc_text(PAGE, HWID_GetBootUUID)
-#pragma alloc_text(PAGE, HWID_GetMonitorEDID)
-
 #endif

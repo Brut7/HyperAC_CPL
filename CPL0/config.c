@@ -38,7 +38,7 @@ volatile LONG g_PT_Walking = 0;
 
 VOID FreeConfig(VOID)
 {
-    PAGED_CODE();
+    
 
     if (g_MainThread != NULL)
     {

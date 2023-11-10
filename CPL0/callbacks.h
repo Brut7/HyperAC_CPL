@@ -11,11 +11,4 @@ STATIC VOID OnProcessCreation(_In_ HANDLE ParentId, _In_ HANDLE ProcessId, _In_ 
 NTSTATUS RegisterCallbacks(VOID);
 NTSTATUS UnregisterCallbacks(VOID);
 
-#pragma alloc_text(PAGE, OnEachPage)
-#pragma alloc_text(PAGE, OnProcessHandleCreation)
-#pragma alloc_text(PAGE, OnThreadHandleCreation)
-#pragma alloc_text(PAGE, OnProcessCreation)
-#pragma alloc_text(PAGE, RegisterCallbacks)
-#pragma alloc_text(PAGE, UnregisterCallbacks)
-
 #endif

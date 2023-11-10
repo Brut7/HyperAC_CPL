@@ -7,7 +7,4 @@
 VOID PeformVmExitCheck(VOID);
 VOID FaultVmExit(VOID);
 
-#pragma alloc_text(PAGE, PeformVmExitCheck)
-#pragma alloc_text(PAGE, FaultVmExit)
-
 #endif // H_HV

@@ -13,8 +13,6 @@
 
 VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT Context)
 {
-	PAGED_CODE();
-
 	UCHAR page_data[PAGE_SIZE] = { 0 };
 	SCAN_HASH hash = { 0 };
 	UCHAR page_hash[16] = { 0 };
@@ -63,7 +61,6 @@ VOID OnEachPage(_In_ ULONG64 PageStart, _In_ ULONG PageFlags, _In_ PSCAN_CONTEXT
 OB_PREOP_CALLBACK_STATUS OnProcessHandleCreation(_In_ PVOID Context, _Inout_ POB_PRE_OPERATION_INFORMATION OpInfo)
 {
 	UNREFERENCED_PARAMETER(Context);
-	PAGED_CODE();
 	
 	PEPROCESS process = NULL;
 	PEPROCESS parent_process = NULL;
@@ -112,7 +109,7 @@ ExitCallback:
 OB_PREOP_CALLBACK_STATUS OnThreadHandleCreation(_In_ PVOID Context, _Inout_ POB_PRE_OPERATION_INFORMATION OpInfo)
 {
 	UNREFERENCED_PARAMETER(Context);
-	PAGED_CODE();
+	
 
 	PEPROCESS process = NULL;
 	PEPROCESS parent_process = NULL;
@@ -168,7 +165,7 @@ ExitCallback:
 VOID OnProcessCreation(_In_ HANDLE ParentId, _In_ HANDLE ProcessId, _In_ BOOLEAN Create)
 {
 	UNREFERENCED_PARAMETER(ParentId);
-	PAGED_CODE();
+	
 
 	PEPROCESS process = NULL;
 	NTSTATUS status = STATUS_SUCCESS;
@@ -208,7 +205,7 @@ VOID OnProcessCreation(_In_ HANDLE ParentId, _In_ HANDLE ProcessId, _In_ BOOLEAN
 
 NTSTATUS RegisterCallbacks(VOID)
 {
-	PAGED_CODE();
+	
 
 	NTSTATUS status = STATUS_SUCCESS;
 	OB_CALLBACK_REGISTRATION ob_callback = { 0 };
@@ -250,7 +247,7 @@ NTSTATUS RegisterCallbacks(VOID)
 
 NTSTATUS UnregisterCallbacks(VOID)
 {
-	PAGED_CODE();
+	
 
 	if (g_ObRegistrationHandle != NULL)
 	{

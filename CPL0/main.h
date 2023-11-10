@@ -5,6 +5,4 @@
 
 VOID MainThread(_In_opt_ PVOID Context);
 
-#pragma alloc_text(PAGE, MainThread)
-
 #endif

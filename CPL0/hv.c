@@ -9,7 +9,7 @@
 
 VOID PeformVmExitCheck(VOID)
 {
-	PAGED_CODE();
+	
 
 #define LOOP_COUNT 255
 #define NORMAL_AVG_TSC 2000
@@ -58,7 +58,7 @@ VOID PeformVmExitCheck(VOID)
 
 VOID FaultVmExit(VOID)
 {
-	PAGED_CODE();
+	
 
 	KAFFINITY prev_affinity = { 0 };
 	KIRQL prev_irql = 0;

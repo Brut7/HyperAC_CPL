@@ -8,7 +8,7 @@
 
 BOOLEAN IsThreadValid(_In_ PETHREAD Thread)
 {
-	PAGED_CODE();
+	
 
 	NTSTATUS status = STATUS_SUCCESS;
 	RTL_MODULE_EXTENDED_INFO system_module = { 0 };
@@ -20,7 +20,7 @@ BOOLEAN IsThreadValid(_In_ PETHREAD Thread)
 
 VOID DetectHiddenThreads(VOID)
 {
-	PAGED_CODE();
+	
 
 	PETHREAD thread = NULL;
 	NTSTATUS status = STATUS_SUCCESS;

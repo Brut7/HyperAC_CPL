@@ -11,11 +11,4 @@ USHORT GetReportCount();
 BOOLEAN InsertReportNode(_In_ REPORT_NODE* NewNode);
 VOID FreeReportList();
 
-#pragma alloc_text(PAGE, ValidateReportList)
-#pragma alloc_text(PAGE, InsertReportNode)
-#pragma alloc_text(PAGE, FreeReportList)
-#pragma alloc_text(PAGE, GetReportCount)
-#pragma alloc_text(PAGE, GetReportNode)
-#pragma alloc_text(PAGE, GetReportNode)
-
 #endif // H_REPORT

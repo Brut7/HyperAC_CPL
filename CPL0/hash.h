@@ -12,10 +12,4 @@ NTSTATUS SHA1_HashBuffer(_In_ UCHAR* Buffer, _In_ SIZE_T Size, _Out_ UCHAR Hash[
 NTSTATUS SHA256_Init(VOID);
 NTSTATUS SHA256_HashBuffer(_In_ UCHAR* Buffer, _In_ SIZE_T Size, _Out_ UCHAR Hash[32]);
 
-#pragma alloc_text(PAGE, MD5_Init)
-#pragma alloc_text(PAGE, MD5_HashBuffer)
-
-#pragma alloc_text(PAGE, SHA1_Init)
-#pragma alloc_text(PAGE, SHA1_HashBuffer)
-
 #endif // H_HASH

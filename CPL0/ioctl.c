@@ -7,7 +7,7 @@
 
 NTSTATUS DeviceControl(_In_ PDRIVER_OBJECT DriverObject, _Inout_ PIRP Irp) {
     UNREFERENCED_PARAMETER(DriverObject);
-    PAGED_CODE();
+    
 
     Irp->IoStatus.Information = 0;
 
@@ -42,7 +42,7 @@ NTSTATUS DeviceControl(_In_ PDRIVER_OBJECT DriverObject, _Inout_ PIRP Irp) {
 
 NTSTATUS DeviceClose(_In_ PDEVICE_OBJECT DeviceObject, _Inout_ PIRP Irp) {
     UNREFERENCED_PARAMETER(DeviceObject);
-    PAGED_CODE();
+    
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -53,7 +53,7 @@ NTSTATUS DeviceClose(_In_ PDEVICE_OBJECT DeviceObject, _Inout_ PIRP Irp) {
 
 NTSTATUS DeviceCreate(_In_ PDEVICE_OBJECT DeviceObject, _Inout_ PIRP Irp) {
     UNREFERENCED_PARAMETER(DeviceObject);
-    PAGED_CODE();
+    
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;

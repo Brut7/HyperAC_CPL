@@ -6,7 +6,7 @@
 
 NTSTATUS PopulateSystemModules(_Out_ PSYSTEM_MODULES pSystemModules)
 {
-    PAGED_CODE();
+    
 
     NTSTATUS status = STATUS_SUCCESS;
     ULONG req_size = 0;
@@ -41,7 +41,7 @@ NTSTATUS PopulateSystemModules(_Out_ PSYSTEM_MODULES pSystemModules)
 
 NTSTATUS FindSystemModuleByAddress(_In_ ULONG64 Address, _Out_ PRTL_MODULE_EXTENDED_INFO pSystemModule)
 {
-    PAGED_CODE();
+    
 
     NTSTATUS status = STATUS_SUCCESS;
     RTL_MODULE_EXTENDED_INFO system_module = { 0 };
@@ -100,7 +100,7 @@ NTSTATUS FindSystemModuleByAddress(_In_ ULONG64 Address, _Out_ PRTL_MODULE_EXTEN
 
 NTSTATUS FindSystemModuleByName(_In_ CONST CHAR* ModuleName, _Out_ PRTL_MODULE_EXTENDED_INFO pSystemModule)
 {
-    PAGED_CODE();
+    
 
     NTSTATUS status = STATUS_SUCCESS;
     RTL_MODULE_EXTENDED_INFO system_module = { 0 };

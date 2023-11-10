@@ -14,7 +14,7 @@
 
 VOID ScannerWorker(PVOID Context)
 {
-	PAGED_CODE();
+	
 
 	CR3 cr3 = { 0 };
 	SCAN_CONTEXT ctx = { 0 };
@@ -46,7 +46,7 @@ VOID ScannerWorker(PVOID Context)
 VOID MainThread(_In_opt_ PVOID Context)
 {
 	UNREFERENCED_PARAMETER(Context);
-	PAGED_CODE();
+	
 
 	NTSTATUS status = STATUS_SUCCESS;
 	PWORK_QUEUE_ITEM worker = NULL;

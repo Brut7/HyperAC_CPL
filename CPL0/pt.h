@@ -18,13 +18,4 @@ VOID OnEachPDPTE(_In_ PDPTE_64 pdpte, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVO
 VOID OnEachPML4E(_In_ PML4E_64 pml4e, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID), _In_opt_ PVOID Context);
 VOID WalkPageTables(_In_ CR3 cr3, _In_ VOID(*OnEachPage)(ULONG64, ULONG, PVOID), _In_opt_ PVOID Context);
 
-#pragma alloc_text(PAGE, GetPTEFlags)
-#pragma alloc_text(PAGE, GetPDEFlags)
-#pragma alloc_text(PAGE, GetPDPTEFlags)
-
-#pragma alloc_text(PAGE, OnEachPDE)
-#pragma alloc_text(PAGE, OnEachPDPTE)
-#pragma alloc_text(PAGE, OnEachPML4E)
-#pragma alloc_text(PAGE, WalkPageTables)
-
 #endif
