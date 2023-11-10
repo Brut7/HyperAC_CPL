@@ -24,6 +24,8 @@ PVOID MMU_Alloc(_In_ SIZE_T Size)
 
 VOID MMU_Free(_In_ PVOID Pool)
 {
+	PAGED_CODE();
+
 	if (Pool == 0)
 	{
 		return;

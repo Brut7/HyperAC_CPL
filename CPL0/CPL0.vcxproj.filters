@@ -19,6 +19,7 @@
     <ClCompile Include="pe.c" />
     <ClCompile Include="threads.c" />
     <ClCompile Include="hash.c" />
+    <ClCompile Include="file.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
@@ -41,5 +42,6 @@
     <ClInclude Include="pe.h" />
     <ClInclude Include="threads.h" />
     <ClInclude Include="hash.h" />
+    <ClInclude Include="file.h" />
   </ItemGroup>
 </Project>
